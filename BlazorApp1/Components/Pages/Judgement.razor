@@ -1,0 +1,15 @@
+@using BlazorApp1.Models
+@page "/judgement"
+@rendermode InteractiveServer
+<h3>Judgement</h3>
+
+<p>Prompt: @GetPrompt()</p>
+
+@code {
+    private GameRound round = new GameRound(new Card(CardKind.Prompt, "fancy"));
+
+    public string GetPrompt()
+    {
+        return round.GetPrompt().value;
+    }
+}
