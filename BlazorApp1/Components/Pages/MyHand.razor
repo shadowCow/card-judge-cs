@@ -1,0 +1,24 @@
+@using BlazorApp1.Models
+@page "/myhand"
+@rendermode InteractiveServer
+<h3>My Hand</h3>
+
+<ul>
+    @foreach (var item in myCards)
+    {
+        <li>@item</li>
+    }
+</ul>
+
+@code {
+    private string[] myCards = new string[]
+    {
+        "a football",
+        "my high school",
+        "the cafeteria",
+        "a water fountain",
+        "breakfast sausages",
+        "broken plates",
+        "sludge",
+    };
+}
