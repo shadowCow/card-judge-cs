@@ -1,12 +1,24 @@
 @using BlazorApp1.Models
+@using BlazorApp1.Services
+@inject IGameService MyGameService
+
 @page "/judgement"
 @rendermode InteractiveServer
 <h3>Judgement</h3>
 
 <p>Prompt: @GetPrompt()</p>
+<p>Session Id: @sessionId</p>
+
+<button class="btn btn-primary" @onclick="CreateGameSession">New Session</button>
 
 @code {
     private GameRound round = new GameRound(new Card(CardKind.Prompt, "fancy"));
+    private string? sessionId;
+
+    public void CreateGameSession()
+    {
+        sessionId = MyGameService.CreateGameSession();
+    }
 
     public string GetPrompt()
     {

@@ -1,5 +1,19 @@
 namespace BlazorApp1.Models
 {
+    public class GameSession
+    {
+        private string _id;
+        public GameSession(string id)
+        {
+            this._id = id;
+        }
+
+        public string GetId()
+        {
+            return this._id;
+        }
+    }
+    
     public class GameRound
     {
         private Card prompt;
