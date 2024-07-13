@@ -1,28 +1,33 @@
 using BlazorApp1.Models;
 
-namespace BlazorApp1.Services
+namespace BlazorApp1.Services;
+
+public interface IGameService
 {
-    public interface IGameService
+    string CreateGameSession();
+    bool HasSession(string sessionId);
+}
+
+public class GameService : IGameService
+{
+    private readonly IGuidService _guidService;
+    private Dictionary<string, GameSession> _gameSessions = new Dictionary<string, GameSession>();
+    public GameService(IGuidService guidService)
     {
-        string CreateGameSession();
+        this._guidService = guidService;
     }
 
-    public class GameService : IGameService
+    public string CreateGameSession()
     {
-        private readonly IGuidService _guidService;
-        private Dictionary<string, GameSession> _gameSessions = new Dictionary<string, GameSession>();
-        public GameService(IGuidService guidService)
-        {
-            this._guidService = guidService;
-        }
+        var gameId = this._guidService.NewGuid().ToString();
+        var gs = new GameSession(gameId);
+        _gameSessions.Add(gs.GetId(), gs);
 
-        public string CreateGameSession()
-        {
-            var gameId = this._guidService.NewGuid().ToString();
-            var gs = new GameSession(gameId);
-            _gameSessions.Add(gs.GetId(), gs);
+        return gs.GetId();
+    }
 
-            return gs.GetId();
-        }
+    public bool HasSession(string sessionId)
+    {
+        return _gameSessions.ContainsKey(sessionId);
     }
 }
