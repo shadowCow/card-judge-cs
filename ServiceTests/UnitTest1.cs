@@ -19,8 +19,9 @@ public class Tests
     public void CreateANewGameSession()
     {
         var service = given.NewGameService();
+        var hostPlayerId = "p1";
 
-        var sessionId = when.CreateGameSession(service);
+        var sessionId = when.CreateGameSession(service, hostPlayerId);
 
         then.SessionExists(service, sessionId);
     }
@@ -28,19 +29,38 @@ public class Tests
     [Test]
     public void EndAGameSession()
     {
-        (var service, var sessionId) = given.ASessionExists();
+        var (service, sessionId, _) = given.ASessionExists();
 
         var result = when.EndGameSession(service, sessionId);
 
         then.SessionDoesNotExist(service, sessionId);
         then.SessionWasAborted(result);
     }
+
+    [Test]
+    public void JoinAGameSession()
+    {
+        (var service, var sessionId, var hostPlayerId) = given.ASessionExists();
+        var playerId = "p2";
+
+        // TBD - need to decide...
+        // is there a 'session lobby',
+        // where players join and wait
+        // for everyone else to join?
+        // and once everyone has joined,
+        // the host can create the session?
+        // or in other words...
+        // SessionLobby can be created by the host
+        // without knowing the player list yet.
+        // GameSession must be created with
+        // the player list already determined.
+    }
 }
 
 public interface IGiven
 {
     IGameService NewGameService();
-    (IGameService, string) ASessionExists();
+    (IGameService Service, string SessionId, string HostPlayerId) ASessionExists();
 }
 
 public class DomainGiven : IGiven
@@ -50,22 +70,23 @@ public class DomainGiven : IGiven
         return new GameService(new GuidService());
     }
 
-    public (IGameService, string) ASessionExists()
+    public (IGameService Service, string SessionId, string HostPlayerId) ASessionExists()
     {
         var service = NewGameService();
-        return (service, service.CreateGameSession());
+        var hostPlayerId = "p1";
+        return (service, service.CreateGameSession(), hostPlayerId);
     }
 }
 
 public interface IWhen
 {
-    string CreateGameSession(IGameService gameService);
+    string CreateGameSession(IGameService gameService, string hostPlayerId);
     EndGameSessionResult EndGameSession(IGameService service, string sessionId);
 }
 
 public class DomainWhen : IWhen
 {
-    public string CreateGameSession(IGameService gameService)
+    public string CreateGameSession(IGameService gameService, string hostPlayerId)
     {
         return gameService.CreateGameSession();
     }
