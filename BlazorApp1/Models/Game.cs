@@ -1,58 +1,57 @@
-namespace BlazorApp1.Models
+namespace BlazorApp1.Models;
+
+public class GameSession
 {
-    public class GameSession
+    private string _id;
+    public GameSession(string id)
     {
-        private string _id;
-        public GameSession(string id)
-        {
-            this._id = id;
-        }
-
-        public string GetId()
-        {
-            return this._id;
-        }
+        this._id = id;
     }
-    
-    public class GameRound
+
+    public string GetId()
     {
-        private Card prompt;
-        private Dictionary<string, Card> submissions = new Dictionary<string, Card>();
-        public GameRound(Card prompt)
-        {
-            this.prompt = prompt;   
-        }
-
-        public Card GetPrompt()
-        {
-            return this.prompt;
-        }
-
-        public void SubmitCard(string playerId, Card card)
-        {
-            this.submissions.Add(playerId, card);
-        }
-
-        public int CountSubmissions()
-        {
-            return this.submissions.Count;
-        }
+        return this._id;
     }
+}
 
-    public struct Card
+public class GameRound
+{
+    private Card prompt;
+    private Dictionary<string, Card> submissions = new Dictionary<string, Card>();
+    public GameRound(Card prompt)
     {
-        public readonly CardKind kind;
-        public readonly string value;
-
-        public Card(CardKind kind, string value)
-        {
-            this.kind = kind;
-            this.value = value;
-        }
+        this.prompt = prompt;   
     }
 
-    public enum CardKind {
-        Prompt,
-        Answer,
+    public Card GetPrompt()
+    {
+        return this.prompt;
     }
+
+    public void SubmitCard(string playerId, Card card)
+    {
+        this.submissions.Add(playerId, card);
+    }
+
+    public int CountSubmissions()
+    {
+        return this.submissions.Count;
+    }
+}
+
+public struct Card
+{
+    public readonly CardKind kind;
+    public readonly string value;
+
+    public Card(CardKind kind, string value)
+    {
+        this.kind = kind;
+        this.value = value;
+    }
+}
+
+public enum CardKind {
+    Prompt,
+    Answer,
 }

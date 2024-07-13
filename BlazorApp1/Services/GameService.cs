@@ -6,21 +6,18 @@ public interface IGameService
 {
     string CreateGameSession();
     bool HasSession(string sessionId);
+    EndGameSessionResult EndGameSession(string sessionId);
 }
 
-public class GameService : IGameService
+public class GameService(IGuidService guidService) : IGameService
 {
-    private readonly IGuidService _guidService;
-    private Dictionary<string, GameSession> _gameSessions = new Dictionary<string, GameSession>();
-    public GameService(IGuidService guidService)
-    {
-        this._guidService = guidService;
-    }
+    private readonly IGuidService _guidService = guidService;
+    private readonly Dictionary<string, IGameSession> _gameSessions = [];
 
     public string CreateGameSession()
     {
         var gameId = this._guidService.NewGuid().ToString();
-        var gs = new GameSession(gameId);
+        var gs = new GameSessionImpl(gameId);
         _gameSessions.Add(gs.GetId(), gs);
 
         return gs.GetId();
@@ -30,4 +27,27 @@ public class GameService : IGameService
     {
         return _gameSessions.ContainsKey(sessionId);
     }
+
+    public EndGameSessionResult EndGameSession(string sessionId)
+    {
+        var session = _gameSessions[sessionId];
+
+        if (session is null)
+        {
+            return new EndGameSessionResult.NotFound(sessionId);
+        }
+        else
+        {
+            _gameSessions.Remove(sessionId);
+            return new EndGameSessionResult.Success(session.End());
+        }
+    }
+}
+
+public abstract record EndGameSessionResult
+{
+    private EndGameSessionResult(){}
+
+    public sealed record NotFound(string SessionId) : EndGameSessionResult;
+    public sealed record Success(GameSessionResult SessionResult) : EndGameSessionResult;
 }
