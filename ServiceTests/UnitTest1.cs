@@ -1,3 +1,6 @@
+using System.Diagnostics;
+using BlazorApp1.Domain;
+using BlazorApp1.Messaging;
 using BlazorApp1.Models;
 using BlazorApp1.Services;
 using Microsoft.VisualBasic;
@@ -6,9 +9,11 @@ namespace ServiceTests;
 
 public class Tests
 {
-    private IGiven given = new DomainGiven();
-    private IWhen when = new DomainWhen();
-    private IThen then = new DomainThen();
+    // TODO - IGiven implementation would be determined by test configuration and injected.
+    private readonly IGiven given = new Given();
+    private readonly When when = new();
+    private readonly Then then = new();
+    private readonly Validate validate = new();
 
     [SetUp]
     public void Setup()
@@ -16,76 +21,95 @@ public class Tests
     }
 
     [Test]
-    public void CreateANewGameSession()
+    public void CreateANewGameLobby()
     {
-        var service = given.NewGameService();
-        var hostPlayerId = "p1";
+        var playerId = "p1";
+        var gameId = "card_judge";
+        var client = given.NewSystem(playerId);
 
-        var sessionId = when.CreateGameSession(service, hostPlayerId);
+        when.ClientCreatesGameLobby(client, gameId);
 
-        then.SessionExists(service, sessionId);
+        then.Within(TimeSpan.FromMilliseconds(50)).Validate(() => {
+            var lobbyId = validate.ClientIsInALobby(client);
+            validate.ClientIsInLobby(client, lobbyId);
+        });
     }
 
-    [Test]
-    public void EndAGameSession()
-    {
-        var (service, sessionId, _) = given.ASessionExists();
+    // [Test]
+    // public void JoinAGameLobby()
+    // {
+    //     throw new NotImplementedException();
+    // }
 
-        var result = when.EndGameSession(service, sessionId);
+    // [Test]
+    // public void EndAGameSession()
+    // {
+    //     throw new NotImplementedException();
+    //     // var (service, sessionId, _) = given.ASessionExists();
 
-        then.SessionDoesNotExist(service, sessionId);
-        then.SessionWasAborted(result);
-    }
+    //     // var result = when.EndGameSession(service, sessionId);
 
-    [Test]
-    public void JoinAGameSession()
-    {
-        (var service, var sessionId, var hostPlayerId) = given.ASessionExists();
-        var playerId = "p2";
+    //     // then.SessionDoesNotExist(service, sessionId);
+    //     // then.SessionWasAborted(result);
+    // }
 
-        // TBD - need to decide...
-        // is there a 'session lobby',
-        // where players join and wait
-        // for everyone else to join?
-        // and once everyone has joined,
-        // the host can create the session?
-        // or in other words...
-        // SessionLobby can be created by the host
-        // without knowing the player list yet.
-        // GameSession must be created with
-        // the player list already determined.
-    }
+    // [Test]
+    // public void JoinAGameSession()
+    // {
+    //     throw new NotImplementedException();
+    //     // (var service, var sessionId, var hostPlayerId) = given.ASessionExists();
+    //     // var playerId = "p2";
+
+    //     // TBD - need to decide...
+    //     // is there a 'session lobby',
+    //     // where players join and wait
+    //     // for everyone else to join?
+    //     // and once everyone has joined,
+    //     // the host can create the session?
+    //     // or in other words...
+    //     // SessionLobby can be created by the host
+    //     // without knowing the player list yet.
+    //     // GameSession must be created with
+    //     // the player list already determined.
+    // }
 }
 
 public interface IGiven
 {
-    IGameService NewGameService();
-    (IGameService Service, string SessionId, string HostPlayerId) ASessionExists();
+    public IGameClient NewSystem(string playerId);
+
+    public IGameClient NewGameClient(string playerId);
 }
 
-public class DomainGiven : IGiven
+public class Given : IGiven
 {
-    public IGameService NewGameService()
+    private Broadcast<FromServer>? broadcast;
+    private GameServer? server;
+
+    public IGameClient NewSystem(string playerId)
     {
-        return new GameService(new GuidService());
+        this.broadcast = new();
+        this.server = new GameServer(new GuidService(), this.broadcast);
+        return NewGameClient(playerId);
     }
 
-    public (IGameService Service, string SessionId, string HostPlayerId) ASessionExists()
+    public IGameClient NewGameClient(string playerId)
     {
-        var service = NewGameService();
-        var hostPlayerId = "p1";
-        return (service, service.CreateGameSession(), hostPlayerId);
+        if (this.broadcast is null || this.server is null)
+        {
+            throw new InvalidOperationException("broadcast and server must be initialized before you can create a new game client");
+        }
+        return new TestClient(playerId, this.server, this.broadcast);
     }
 }
 
-public interface IWhen
+public class When
 {
-    string CreateGameSession(IGameService gameService, string hostPlayerId);
-    EndGameSessionResult EndGameSession(IGameService service, string sessionId);
-}
+    public void ClientCreatesGameLobby(IGameClient gameClient, string gameId)
+    {
+        gameClient.CreateGameLobby(gameId);
+    }
 
-public class DomainWhen : IWhen
-{
     public string CreateGameSession(IGameService gameService, string hostPlayerId)
     {
         return gameService.CreateGameSession();
@@ -97,15 +121,76 @@ public class DomainWhen : IWhen
     }
 }
 
-public interface IThen
+public class Then
 {
-    void SessionExists(IGameService gameService, string sessionId);
-    void SessionDoesNotExist(IGameService gameService, string sessionId);
-    public void SessionWasAborted(EndGameSessionResult result);
+    public Within Within(TimeSpan timeSpan)
+    {
+        return new(timeSpan);
+    }
 }
 
-public class DomainThen : IThen
+public class Within(TimeSpan timeSpan)
 {
+    public void Validate(Action validation)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        Exception? exception;
+
+        do
+        {
+            try
+            {
+                validation();
+                exception = null;
+                break;
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
+            }
+            finally
+            {
+                Thread.Sleep(10);
+            }
+        }
+        while (stopwatch.Elapsed < timeSpan);
+
+        if (exception is not null)
+        {
+            throw new TimeoutException(
+                message: "Validation timed out.",
+                innerException: exception
+            );
+        }
+    }
+}
+
+public class Validate
+{
+    
+    public void LobbyExists(IGameServer server, string lobbyId)
+    {
+        Assert.That(server.HasLobby(lobbyId), Is.True);
+    }
+
+    public string ClientIsInALobby(IGameClient client)
+    {
+        var lobbyId = client.GetLobbyId();
+        if (lobbyId is null)
+        {
+            throw new AssertionException("expected client to be in a lobby");
+        }
+        else
+        {
+            return lobbyId;
+        }
+    }
+
+    public void ClientIsInLobby(IGameClient client, string lobbyId)
+    {
+        Assert.That(client.IsInLobby(lobbyId), Is.True);
+    }
+
     public void SessionExists(IGameService gameService, string sessionId)
     {
         Assert.That(gameService.HasSession(sessionId), Is.True);
@@ -136,4 +221,5 @@ public class DomainThen : IThen
                 break;
         }
     }
+
 }

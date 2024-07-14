@@ -4,6 +4,8 @@ namespace BlazorApp1.Services;
 
 public interface IGameService
 {
+    string CreateGameLobby(string gameId, string playerId);
+    bool HasLobby(string lobbyId);
     string CreateGameSession();
     bool HasSession(string sessionId);
     EndGameSessionResult EndGameSession(string sessionId);
@@ -13,6 +15,19 @@ public class GameService(IGuidService guidService) : IGameService
 {
     private readonly IGuidService _guidService = guidService;
     private readonly Dictionary<string, IGameSession> _gameSessions = [];
+    private readonly Dictionary<string, IGameLobby> _lobbies = [];
+
+    public string CreateGameLobby(string gameId, string playerId)
+    {
+        var lobbyId = this._guidService.NewGuid().ToString();
+
+        return lobbyId;
+    }
+
+    public bool HasLobby(string lobbyId)
+    {
+        return this._lobbies.ContainsKey(lobbyId);
+    }
 
     public string CreateGameSession()
     {
