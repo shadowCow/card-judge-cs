@@ -37,6 +37,11 @@ public class TestClient : IGameClient
         server.Submit(new GameServerCommand.CreateGameLobby(this.playerId, NextRequestId, gameId, playerId));
     }
 
+    public void JoinGameLobby(string lobbyId)
+    {
+        server.Submit(new GameServerCommand.JoinGameLobby(this.playerId, NextRequestId, lobbyId, playerId));
+    }
+
     public string? GetLobbyId()
     {
         return _lobbyId;
@@ -52,27 +57,30 @@ public class TestClient : IGameClient
         public void OnMessage(FromServer msg)
         {
             switch (msg)
-        {
-            case FromServer.CommandResponse response:
-                switch (response.Result)
-                {
-                    case CommandResult.CommandSuccess success:
-                        switch (success.Evt)
-                        {
-                            case GameServerEvent.LobbyCreated lobbyCreated:
-                                outer._lobbyId = lobbyCreated.LobbyId;
-                                break;
-                            default:
-                                throw new ArgumentException($"unrecognized GameServerEvent ${success.Evt}");
-                        }
-                        break;
-                    default:
-                        throw new ArgumentException($"unrecognized result: {msg}");
-                }
-                break;
-            default:
-                throw new ArgumentException($"unrecognized message to client: {msg}");
-        }
+            {
+                case FromServer.CommandResponse response:
+                    switch (response.Result)
+                    {
+                        case CommandResult.CommandSuccess success:
+                            switch (success.Evt)
+                            {
+                                case GameServerEvent.LobbyCreated lobbyCreated:
+                                    outer._lobbyId = lobbyCreated.LobbyId;
+                                    break;
+                                case GameServerEvent.LobbyJoined lobbyJoined:
+                                    outer._lobbyId = lobbyJoined.LobbyId;
+                                    break;
+                                default:
+                                    throw new ArgumentException($"unrecognized GameServerEvent ${success.Evt}");
+                            }
+                            break;
+                        default:
+                            throw new ArgumentException($"unrecognized result: {msg}");
+                    }
+                    break;
+                default:
+                    throw new ArgumentException($"unrecognized message to client: {msg}");
+            }
         }
     }
 }

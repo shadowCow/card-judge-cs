@@ -1,8 +1,11 @@
 using BlazorApp1.Messaging;
 using BlazorApp1.Models;
+using BlazorApp1.MonadUtil;
 using BlazorApp1.Services;
 
 namespace BlazorApp1.Domain;
+
+using ServerResult = Result<GameServerEvent, GameServerError>;
 
 public interface IGameServer
 {
@@ -27,6 +30,7 @@ public abstract record GameServerCommand
     }
 
     public sealed record CreateGameLobby(string ClientId, string RequestId, string GameId, string PlayerId) : GameServerCommand(ClientId, RequestId);
+    public sealed record JoinGameLobby(string ClientId, string RequestId, string LobbyId, string PlayerId) : GameServerCommand(ClientId, RequestId);
 }
 
 public abstract record FromServer
@@ -42,51 +46,118 @@ public abstract record CommandResult
     private CommandResult() {}
 
     public sealed record CommandSuccess(GameServerEvent Evt) : CommandResult;
-    public sealed record CommandUnknown(string CommandName) : CommandResult;
+    public sealed record CommandFailure(GameServerError Error) : CommandResult;
 }
 
 public abstract record GameServerEvent
 {
     private GameServerEvent() {}
 
-    public sealed record LobbyCreated(string LobbyId) : GameServerEvent;
+    public sealed record LobbyCreated(string LobbyId, string PlayerId) : GameServerEvent;
+    public sealed record LobbyJoined(string LobbyId, string PlayerId) : GameServerEvent;
 }
 
-public class GameServer(IGuidService guidService, IMessageChannel<FromServer> outbound) : IGameServer
+public abstract record GameServerError
+{
+    private GameServerError() {}
+    
+    public sealed record UnknownError(string Detail) : GameServerError;
+    public sealed record UnknownCommand(string CommandName) : GameServerError;
+    public sealed record GameDoesNotExist(string GameId) : GameServerError;
+    public sealed record LobbyIsFull(string LobbyId) : GameServerError;
+    public sealed record LobbyDoesNotExist(string LobbyId) : GameServerError;
+}
+
+public class GameServer(
+    IGuidService guidService,
+    IGameRepository gameRepo,
+    IMessageChannel<FromServer> outbound) : IGameServer
 {
     private readonly Dictionary<string, IGameLobby> _lobbies = [];
 
     public void Submit(GameServerCommand msg)
     {
-        switch (msg)
+        ServerResult result = msg switch
         {
-            case GameServerCommand.CreateGameLobby createGameLobby:
-                this.OnCreateGameLobby(createGameLobby);
+            GameServerCommand.CreateGameLobby createGameLobby => OnCreateGameLobby(createGameLobby),
+            GameServerCommand.JoinGameLobby joinGameLobby => OnJoinGameLobby(joinGameLobby),
+            _ => ServerResult.Error(new GameServerError.UnknownCommand(msg.GetType().Name))
+        };
+
+        switch (result)
+        {
+            case ServerResult.SuccessResult success:
+                OnSuccess(msg, success.Value);
+                break;
+            case ServerResult.ErrorResult err:
+                OnFailure(msg, err.Err);
                 break;
             default:
-                outbound.HandleMessage(new FromServer.CommandResponse(
-                    msg.ClientId,
-                    msg.RequestId,
-                    new CommandResult.CommandUnknown(msg.GetType().Name))
-                );
+                OnFailure(msg, new GameServerError.UnknownCommand(msg.GetType().Name));
                 break;
         }
     }
 
-    private void OnCreateGameLobby(GameServerCommand.CreateGameLobby msg)
+    private ServerResult OnCreateGameLobby(GameServerCommand.CreateGameLobby msg)
     {
-        var lobbyId = guidService.NewGuid();
-        _lobbies.Add(lobbyId.ToString(), new GameLobby(lobbyId.ToString()));
+        var game = gameRepo.GetById(msg.GameId);
+        if (game is null)
+        {
+            return ServerResult.Error(new GameServerError.GameDoesNotExist(msg.GameId));
+        }
 
-        outbound.HandleMessage(new FromServer.CommandResponse(
-            msg.ClientId,
-            msg.RequestId,
-            new CommandResult.CommandSuccess(new GameServerEvent.LobbyCreated(lobbyId.ToString()))
-        ));
+        var lobbyId = guidService.NewGuid();
+        _lobbies.Add(lobbyId.ToString(), new GameLobby(lobbyId.ToString(), msg.GameId, game.MaxPlayers, msg.PlayerId));
+
+        return ServerResult.Success(new GameServerEvent.LobbyCreated(lobbyId.ToString(), msg.PlayerId));
+    }
+
+    private ServerResult OnJoinGameLobby(GameServerCommand.JoinGameLobby msg)
+    {
+        if (_lobbies.TryGetValue(msg.LobbyId, out var lobby))
+        {
+            var err = lobby.Join(msg.PlayerId);
+            if (err is not null)
+            {
+                GameServerError serverErr = err switch
+                {
+                    GameLobbyError.LobbyIsFullError lobbyErr => new GameServerError.LobbyIsFull(lobbyErr.LobbyId),
+                    _ => new GameServerError.UnknownError($"unexpected GameLobbyError: ${err}")
+                };
+
+                return ServerResult.Error(serverErr);
+            }
+            else
+            {
+                return ServerResult.Success(new GameServerEvent.LobbyJoined(msg.LobbyId, msg.PlayerId));
+            }
+        }
+        else
+        {
+            return ServerResult.Error(new GameServerError.LobbyDoesNotExist(msg.LobbyId));
+        }
     }
 
     public bool HasLobby(string lobbyId)
     {
         throw new NotImplementedException();
+    }
+
+    private void OnSuccess(GameServerCommand msg, GameServerEvent evt)
+    {
+        outbound.HandleMessage(new FromServer.CommandResponse(
+            msg.ClientId,
+            msg.RequestId,
+            new CommandResult.CommandSuccess(evt)
+        ));
+    }
+
+    private void OnFailure(GameServerCommand msg, GameServerError err)
+    {
+        outbound.HandleMessage(new FromServer.CommandResponse(
+            msg.ClientId,
+            msg.RequestId,
+            new CommandResult.CommandFailure(err)
+        ));
     }
 }

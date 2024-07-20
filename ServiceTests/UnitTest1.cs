@@ -3,7 +3,6 @@ using BlazorApp1.Domain;
 using BlazorApp1.Messaging;
 using BlazorApp1.Models;
 using BlazorApp1.Services;
-using Microsoft.VisualBasic;
 
 namespace ServiceTests;
 
@@ -11,9 +10,11 @@ public class Tests
 {
     // TODO - IGiven implementation would be determined by test configuration and injected.
     private readonly IGiven given = new Given();
-    private readonly When when = new();
-    private readonly Then then = new();
-    private readonly Validate validate = new();
+
+    private readonly TimeSpan aShortTime = TimeSpan.FromMilliseconds(50);
+
+    private const string player1Id = "p1";
+    private const string player2Id = "p2";
 
     [SetUp]
     public void Setup()
@@ -23,23 +24,30 @@ public class Tests
     [Test]
     public void CreateANewGameLobby()
     {
-        var playerId = "p1";
-        var gameId = "card_judge";
-        var client = given.NewSystem(playerId);
+        var client = given.NewSystem(player1Id);
 
-        when.ClientCreatesGameLobby(client, gameId);
+        When.ClientCreatesGameLobby(client, TestGames.ticTacToeId);
 
-        then.Within(TimeSpan.FromMilliseconds(50)).Validate(() => {
-            var lobbyId = validate.ClientIsInALobby(client);
-            validate.ClientIsInLobby(client, lobbyId);
+        Then.Within(aShortTime).Validate(() =>
+        {
+            var lobbyId = Validate.ClientIsInALobby(client);
+            Validate.ClientIsInLobby(client, lobbyId);
         });
     }
 
-    // [Test]
-    // public void JoinAGameLobby()
-    // {
-    //     throw new NotImplementedException();
-    // }
+    [Test]
+    public void JoinAGameLobby()
+    {
+        var (host, lobbyId) = given.NewSystemWithAGameLobby(player1Id, TestGames.ticTacToeId);
+        var guest = given.NewGameClient(player2Id);
+        
+        When.ClientJoinsGameLobby(guest, lobbyId);
+
+        Then.Within(aShortTime).Validate(() =>
+        {
+            Validate.ClientIsInLobby(guest, lobbyId);
+        });
+    }
 
     // [Test]
     // public void EndAGameSession()
@@ -79,6 +87,8 @@ public interface IGiven
     public IGameClient NewSystem(string playerId);
 
     public IGameClient NewGameClient(string playerId);
+
+    public (IGameClient client, string lobbyId) NewSystemWithAGameLobby(string playerId, string gameId);
 }
 
 public class Given : IGiven
@@ -86,10 +96,12 @@ public class Given : IGiven
     private Broadcast<FromServer>? broadcast;
     private GameServer? server;
 
+    private readonly InMemoryGameRepository gameRepo = new(TestGames.All);
+
     public IGameClient NewSystem(string playerId)
     {
         this.broadcast = new();
-        this.server = new GameServer(new GuidService(), this.broadcast);
+        this.server = new GameServer(new GuidService(), gameRepo, this.broadcast);
         return NewGameClient(playerId);
     }
 
@@ -101,21 +113,40 @@ public class Given : IGiven
         }
         return new TestClient(playerId, this.server, this.broadcast);
     }
+
+    public (IGameClient client, string lobbyId) NewSystemWithAGameLobby(string playerId, string gameId)
+    {
+        var client = NewSystem(playerId);
+        client.CreateGameLobby(gameId);
+
+        string lobbyId = "";
+        Then.Within(Times.AShortTime).Validate(() =>
+        {
+            lobbyId = Validate.ClientIsInALobby(client);
+        });
+
+        return (client, lobbyId);
+    }
 }
 
 public class When
 {
-    public void ClientCreatesGameLobby(IGameClient gameClient, string gameId)
+    public static void ClientCreatesGameLobby(IGameClient gameClient, string gameId)
     {
         gameClient.CreateGameLobby(gameId);
     }
 
-    public string CreateGameSession(IGameService gameService, string hostPlayerId)
+    public static void ClientJoinsGameLobby(IGameClient gameClient, string lobbyId)
+    {
+        gameClient.JoinGameLobby(lobbyId);
+    }
+
+    public static string CreateGameSession(IGameService gameService, string hostPlayerId)
     {
         return gameService.CreateGameSession();
     }
 
-    public EndGameSessionResult EndGameSession(IGameService service, string sessionId)
+    public static EndGameSessionResult EndGameSession(IGameService service, string sessionId)
     {
         return service.EndGameSession(sessionId);
     }
@@ -123,7 +154,7 @@ public class When
 
 public class Then
 {
-    public Within Within(TimeSpan timeSpan)
+    public static Within Within(TimeSpan timeSpan)
     {
         return new(timeSpan);
     }
@@ -168,12 +199,12 @@ public class Within(TimeSpan timeSpan)
 public class Validate
 {
     
-    public void LobbyExists(IGameServer server, string lobbyId)
+    public static void LobbyExists(IGameServer server, string lobbyId)
     {
         Assert.That(server.HasLobby(lobbyId), Is.True);
     }
 
-    public string ClientIsInALobby(IGameClient client)
+    public static string ClientIsInALobby(IGameClient client)
     {
         var lobbyId = client.GetLobbyId();
         if (lobbyId is null)
@@ -186,22 +217,22 @@ public class Validate
         }
     }
 
-    public void ClientIsInLobby(IGameClient client, string lobbyId)
+    public static void ClientIsInLobby(IGameClient client, string lobbyId)
     {
         Assert.That(client.IsInLobby(lobbyId), Is.True);
     }
 
-    public void SessionExists(IGameService gameService, string sessionId)
+    public static void SessionExists(IGameService gameService, string sessionId)
     {
         Assert.That(gameService.HasSession(sessionId), Is.True);
     }
 
-    public void SessionDoesNotExist(IGameService gameService, string sessionId)
+    public static void SessionDoesNotExist(IGameService gameService, string sessionId)
     {
         Assert.That(gameService.HasSession(sessionId), Is.False);
     }
 
-    public void SessionWasAborted(EndGameSessionResult result)
+    public static void SessionWasAborted(EndGameSessionResult result)
     {
         switch (result)
         {
@@ -222,4 +253,17 @@ public class Validate
         }
     }
 
+}
+
+class Times
+{
+    public static readonly TimeSpan AShortTime = TimeSpan.FromMilliseconds(50);
+}
+
+class TestGames
+{
+    public const string ticTacToeId = "tic-tac-toe";
+    public static readonly Game ticTacToe = new(ticTacToeId, 2);
+
+    public static readonly Game[] All = [ticTacToe];
 }
