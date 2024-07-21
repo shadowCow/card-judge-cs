@@ -17,6 +17,6 @@ public class InMemoryGameRepository(Game[] games) : IGameRepository
 
     public Game? GetById(string id)
     {
-        return games.First(x => x.Id == id);
+        return games.FirstOrDefault(x => x.Id == id);
     }
 }

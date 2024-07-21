@@ -28,6 +28,34 @@ public class Validate
         Assert.That(client.IsInLobby(lobbyId), Is.True);
     }
 
+    public static void ClientReceivedGameDoesNotExistError(IGameClient client, string gameId)
+    {
+        var error = client.GetLastError();
+        switch (error)
+        {
+            case GameServerError.GameDoesNotExist gameNotExist:
+                Assert.That(gameNotExist.GameId, Is.EqualTo(gameId));
+                break;
+            default:
+                Assert.Fail($"expected last error to be LobbyIsFull, but was ${error}");
+                break;
+        }
+    }
+
+    public static void ClientReceivedLobbyDoesNotExistError(IGameClient client, string lobbyId)
+    {
+        var error = client.GetLastError();
+        switch (error)
+        {
+            case GameServerError.LobbyDoesNotExist lobbyNotExist:
+                Assert.That(lobbyNotExist.LobbyId, Is.EqualTo(lobbyId));
+                break;
+            default:
+                Assert.Fail($"expected last error to be LobbyDoesNotExist, but was ${error}");
+                break;
+        }
+    }
+
     public static void ClientReceivedLobbyIsFullError(IGameClient client, string lobbyId)
     {
         var error = client.GetLastError();

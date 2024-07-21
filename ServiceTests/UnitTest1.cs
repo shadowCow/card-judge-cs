@@ -33,6 +33,20 @@ public class Tests
     }
 
     [Test]
+    public void CreateGameLobbyFailureGameDoesNotExist()
+    {
+        var invalidGameId = "invalid-game";
+        var client = given.NewSystem(player1Id);
+
+        When.ClientCreatesGameLobby(client, invalidGameId);
+
+        Then.Within(Time.AShortTime).Validate(() =>
+        {
+            Validate.ClientReceivedGameDoesNotExistError(client, invalidGameId);
+        });
+    }
+
+    [Test]
     public void JoinAGameLobby()
     {
         var (host, lobbyId) = given.NewSystemWithAGameLobby(player1Id, TestGames.ticTacToeId);
@@ -43,6 +57,21 @@ public class Tests
         Then.Within(Time.AShortTime).Validate(() =>
         {
             Validate.ClientIsInLobby(guest, lobbyId);
+        });
+    }
+
+    [Test]
+    public void JoinGameLobbyFailureLobbyDoesNotExist()
+    {
+        var (host, lobbyId) = given.NewSystemWithAGameLobby(player1Id, TestGames.ticTacToeId);
+        var guest = given.NewGameClient(player2Id);
+        var invalidLobbyId = "invalid-lobby";
+
+        When.ClientJoinsGameLobby(guest, invalidLobbyId);
+
+        Then.Within(Time.AShortTime).Validate(() =>
+        {
+            Validate.ClientReceivedLobbyDoesNotExistError(guest, invalidLobbyId);
         });
     }
 
