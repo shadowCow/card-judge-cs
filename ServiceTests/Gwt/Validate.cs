@@ -28,4 +28,17 @@ public class Validate
         Assert.That(client.IsInLobby(lobbyId), Is.True);
     }
 
+    public static void ClientReceivedLobbyIsFullError(IGameClient client, string lobbyId)
+    {
+        var error = client.GetLastError();
+        switch (error)
+        {
+            case GameServerError.LobbyIsFull lobbyFull:
+                Assert.That(lobbyFull.LobbyId, Is.EqualTo(lobbyId));
+                break;
+            default:
+                Assert.Fail($"expected last error to be LobbyIsFull, but was ${error}");
+                break;
+        }
+    }
 }

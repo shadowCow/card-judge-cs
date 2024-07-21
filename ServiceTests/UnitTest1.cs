@@ -11,6 +11,7 @@ public class Tests
 
     private const string player1Id = "p1";
     private const string player2Id = "p2";
+    private const string player3Id = "p3";
 
     [SetUp]
     public void Setup()
@@ -42,6 +43,20 @@ public class Tests
         Then.Within(Time.AShortTime).Validate(() =>
         {
             Validate.ClientIsInLobby(guest, lobbyId);
+        });
+    }
+
+    [Test]
+    public void JoinGameLobbyFailureLobbyIsFull()
+    {
+        var (host, lobbyId) = given.NewSystemWithAFullGameLobby(player1Id, TestGames.ticTacToeId);
+        var guest = given.NewGameClient(player3Id);
+
+        When.ClientJoinsGameLobby(guest, lobbyId);
+
+        Then.Within(Time.AShortTime).Validate(() =>
+        {
+            Validate.ClientReceivedLobbyIsFullError(guest, lobbyId);
         });
     }
 

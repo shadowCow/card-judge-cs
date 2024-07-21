@@ -30,7 +30,7 @@ public sealed class GameLobby(string id, string gameId, int maxPlayers, string h
     {
         if (this.playerIds.Count == maxPlayers)
         {
-            return GameLobbyError.LobbyIsFull(playerId);
+            return GameLobbyError.LobbyIsFull(id);
         }
         else
         {

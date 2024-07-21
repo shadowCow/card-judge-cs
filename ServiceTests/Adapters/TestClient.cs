@@ -31,6 +31,7 @@ public class TestClient : IGameClient
     
     // state
     private string? _lobbyId;
+    private GameServerError? _lastError;
 
     public void CreateGameLobby(string gameId)
     {
@@ -52,6 +53,11 @@ public class TestClient : IGameClient
         return _lobbyId is not null && _lobbyId == lobbyId;
     }
 
+    public GameServerError? GetLastError()
+    {
+        return _lastError;
+    }
+
     private class Subscriber(TestClient outer) : ISubscriber<FromServer>
     {
         public void OnMessage(FromServer msg)
@@ -62,6 +68,7 @@ public class TestClient : IGameClient
                     switch (response.Result)
                     {
                         case CommandResult.CommandSuccess success:
+                            outer._lastError = null;
                             switch (success.Evt)
                             {
                                 case GameServerEvent.LobbyCreated lobbyCreated:
@@ -72,6 +79,20 @@ public class TestClient : IGameClient
                                     break;
                                 default:
                                     throw new ArgumentException($"unrecognized GameServerEvent ${success.Evt}");
+                            }
+                            break;
+                        case CommandResult.CommandFailure failure:
+                            switch (failure.Error)
+                            {
+                                case GameServerError.GameDoesNotExist:
+                                case GameServerError.LobbyIsFull:
+                                case GameServerError.LobbyDoesNotExist:
+                                case GameServerError.UnknownCommand:
+                                case GameServerError.UnknownError:
+                                    outer._lastError = failure.Error;
+                                    break;
+                                default:
+                                    throw new ArgumentException($"unrecognized GameServerError ${failure.Error}");
                             }
                             break;
                         default:

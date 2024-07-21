@@ -2,8 +2,7 @@
 
 - Fill in more tests.
 
-  - Fail to Join a lobby due to game does not exist
-  - Fail to Join a lobby due to lobby is full
+  - Fail to Create a lobby due to game does not exist
   - Close a lobby
   - Create a session with a list of players
   - Join a session

@@ -9,4 +9,5 @@ public interface IGameClient
     // State Queries
     string? GetLobbyId();
     bool IsInLobby(string lobbyId);
+    GameServerError? GetLastError();
 }
