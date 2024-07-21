@@ -1,4 +1,4 @@
-namespace BlazorApp1.Messaging;
+namespace Domain.Messaging;
 
 public interface IMessageChannel<T>
 {

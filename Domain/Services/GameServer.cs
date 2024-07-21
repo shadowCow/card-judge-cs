@@ -1,9 +1,9 @@
-using BlazorApp1.Messaging;
-using BlazorApp1.Models;
-using BlazorApp1.MonadUtil;
-using BlazorApp1.Services;
+using Domain.Messaging;
+using Domain.Models;
+using Domain.MonadUtil;
+using Domain.Ports;
 
-namespace BlazorApp1.Domain;
+namespace Domain.Services;
 
 using ServerResult = Result<GameServerEvent, GameServerError>;
 

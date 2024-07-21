@@ -1,4 +1,4 @@
-namespace BlazorApp1.MonadUtil;
+namespace Domain.MonadUtil;
 
 public abstract record Result<TSuccess, TError>
 {

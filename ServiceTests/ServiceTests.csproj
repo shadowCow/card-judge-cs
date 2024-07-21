@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../BlazorApp1/BlazorApp1.csproj"/>
+    <ProjectReference Include="../Domain/Domain.csproj"/>
   </ItemGroup>
 
 </Project>

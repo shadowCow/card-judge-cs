@@ -1,6 +1,6 @@
-using BlazorApp1.MonadUtil;
+using Domain.MonadUtil;
 
-namespace BlazorApp1.Models;
+namespace Domain.Models;
 
 public interface IGameLobby
 {

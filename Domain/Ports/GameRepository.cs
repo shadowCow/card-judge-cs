@@ -1,6 +1,6 @@
-using BlazorApp1.Models;
+using Domain.Models;
 
-namespace BlazorApp1.Domain;
+namespace Domain.Ports;
 
 public interface IGameRepository
 {

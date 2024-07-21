@@ -1,7 +1,7 @@
-using BlazorApp1.Domain;
-using BlazorApp1.Messaging;
+using Domain.Services;
+using Domain.Messaging;
 
-namespace ServiceTests;
+namespace ServiceTests.Adapters;
 
 
 public class TestClient : IGameClient
