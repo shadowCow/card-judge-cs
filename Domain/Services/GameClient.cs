@@ -5,6 +5,7 @@ public interface IGameClient
     // Actions
     void CreateGameLobby(string gameId);
     void JoinGameLobby(string lobbyId);
+    void CloseGameLobby(string lobbyId);
 
     // State Queries
     string? GetLobbyId();

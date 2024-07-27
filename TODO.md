@@ -1,5 +1,7 @@
 # TODO
 
+- Make Validate return a Task or whatever so that we can 'await' it.
+
 - Design lobby and session flow and relationship.
   Is it 1 to 1? So a lobby is like 'phase 1' and the session is 'phase 2'?
   When a session ends, is everyone dropped out to 'home'?

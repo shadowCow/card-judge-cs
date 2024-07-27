@@ -31,6 +31,7 @@ public abstract record GameServerCommand
 
     public sealed record CreateGameLobby(string ClientId, string RequestId, string GameId, string PlayerId) : GameServerCommand(ClientId, RequestId);
     public sealed record JoinGameLobby(string ClientId, string RequestId, string LobbyId, string PlayerId) : GameServerCommand(ClientId, RequestId);
+    public sealed record CloseGameLobby(string ClientId, string RequestId, string LobbyId, string PlayerId) : GameServerCommand(ClientId, RequestId);
 }
 
 public abstract record FromServer
@@ -55,6 +56,7 @@ public abstract record GameServerEvent
 
     public sealed record LobbyCreated(string LobbyId, string PlayerId) : GameServerEvent;
     public sealed record LobbyJoined(string LobbyId, string PlayerId) : GameServerEvent;
+    public sealed record LobbyClosed(string LobbyId, string[] PlayerIds) : GameServerEvent;
 }
 
 public abstract record GameServerError
@@ -81,6 +83,7 @@ public class GameServer(
         {
             GameServerCommand.CreateGameLobby createGameLobby => OnCreateGameLobby(createGameLobby),
             GameServerCommand.JoinGameLobby joinGameLobby => OnJoinGameLobby(joinGameLobby),
+            GameServerCommand.CloseGameLobby closeGameLobby => OnCloseGameLobby(closeGameLobby),
             _ => ServerResult.Error(new GameServerError.UnknownCommand(msg.GetType().Name))
         };
 
@@ -131,6 +134,20 @@ public class GameServer(
             {
                 return ServerResult.Success(new GameServerEvent.LobbyJoined(msg.LobbyId, msg.PlayerId));
             }
+        }
+        else
+        {
+            return ServerResult.Error(new GameServerError.LobbyDoesNotExist(msg.LobbyId));
+        }
+    }
+
+    private ServerResult OnCloseGameLobby(GameServerCommand.CloseGameLobby msg)
+    {
+        if (_lobbies.TryGetValue(msg.LobbyId, out var lobby))
+        {
+            var playerIds = lobby.ListPlayers().ToArray();
+            _lobbies.Remove(msg.LobbyId);
+            return ServerResult.Success(new GameServerEvent.LobbyClosed(msg.LobbyId, playerIds));
         }
         else
         {

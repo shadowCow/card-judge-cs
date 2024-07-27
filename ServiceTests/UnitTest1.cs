@@ -89,6 +89,40 @@ public class Tests
         });
     }
 
+    [Test]
+    public void CloseLobby()
+    {
+        var (host, lobbyId) = given.NewSystemWithAGameLobby(player1Id, TestGames.ticTacToeId);
+        
+        When.ClientClosesGameLobby(host, lobbyId);
+
+        Then.Within(Time.AShortTime).Validate(() =>
+        {
+            Validate.ClientIsNotInALobby(host);
+
+            When.ClientJoinsGameLobby(host, lobbyId);
+            
+            Then.Within(Time.AShortTime).Validate(() =>
+            {
+                Validate.ClientReceivedLobbyDoesNotExistError(host, lobbyId);
+            });
+        });
+    }
+
+    [Test]
+    public void CloseNonexistantLobbyReceivesError()
+    {
+        var host = given.NewSystem(player1Id);
+        var lobbyId = "does-not-exist";
+        
+        When.ClientClosesGameLobby(host, lobbyId);
+
+        Then.Within(Time.AShortTime).Validate(() =>
+        {
+            Validate.ClientReceivedLobbyDoesNotExistError(host, lobbyId);
+        });
+    }
+
     // [Test]
     // public void EndAGameSession()
     // {

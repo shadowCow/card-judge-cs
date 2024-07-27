@@ -43,6 +43,11 @@ public class TestClient : IGameClient
         server.Submit(new GameServerCommand.JoinGameLobby(this.playerId, NextRequestId, lobbyId, playerId));
     }
 
+    public void CloseGameLobby(string lobbyId)
+    {
+        server.Submit(new GameServerCommand.CloseGameLobby(this.playerId, NextRequestId, lobbyId, playerId));
+    }
+
     public string? GetLobbyId()
     {
         return _lobbyId;
@@ -76,6 +81,12 @@ public class TestClient : IGameClient
                                     break;
                                 case GameServerEvent.LobbyJoined lobbyJoined:
                                     outer._lobbyId = lobbyJoined.LobbyId;
+                                    break;
+                                case GameServerEvent.LobbyClosed lobbyClosed:
+                                    if (outer._lobbyId == lobbyClosed.LobbyId)
+                                    {
+                                        outer._lobbyId = null;
+                                    }
                                     break;
                                 default:
                                     throw new ArgumentException($"unrecognized GameServerEvent ${success.Evt}");

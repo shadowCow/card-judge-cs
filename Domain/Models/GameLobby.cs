@@ -1,4 +1,5 @@
 using Domain.MonadUtil;
+using System.Collections.Generic;
 
 namespace Domain.Models;
 
@@ -11,6 +12,7 @@ public interface IGameLobby
     string GetId();
     string GetGameId();
     string HasPlayer(string playerId);
+    IEnumerable<string> ListPlayers();
 }
 
 public abstract record GameLobbyError
@@ -52,5 +54,10 @@ public sealed class GameLobby(string id, string gameId, int maxPlayers, string h
     public string HasPlayer(string playerId)
     {
         throw new NotImplementedException();
+    }
+
+    public IEnumerable<string> ListPlayers()
+    {
+        return playerIds.ToArray();
     }
 }

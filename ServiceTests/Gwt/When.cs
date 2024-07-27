@@ -13,4 +13,9 @@ public class When
     {
         gameClient.JoinGameLobby(lobbyId);
     }
+
+    public static void ClientClosesGameLobby(IGameClient gameClient, string lobbyId)
+    {
+        gameClient.CloseGameLobby(lobbyId);
+    }
 }

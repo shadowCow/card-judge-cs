@@ -23,6 +23,15 @@ public class Validate
         }
     }
 
+    public static void ClientIsNotInALobby(IGameClient client)
+    {
+        var lobbyId = client.GetLobbyId();
+        if (lobbyId is not null)
+        {
+            throw new AssertionException($"expected client not to be in a lobby, but was in {lobbyId}");
+        }
+    }
+
     public static void ClientIsInLobby(IGameClient client, string lobbyId)
     {
         Assert.That(client.IsInLobby(lobbyId), Is.True);

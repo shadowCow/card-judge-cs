@@ -1,6 +1,6 @@
 using System;
 
-namespace Domain.Services;
+namespace Domain.Ports;
 
 public interface IGuidService
 {
