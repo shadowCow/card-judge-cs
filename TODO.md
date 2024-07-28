@@ -26,10 +26,10 @@
 
 - Fill in more tests.
 
-  - Close a lobby
-  - Create a session with a list of players
-  - Join a session
+  - Make game move
   - End a session
+
+- Make tic-tac-toe rules.
 
 - Split Tests into separate files... by Action?
 

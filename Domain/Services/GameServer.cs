@@ -33,6 +33,7 @@ public abstract record GameServerCommand
     public sealed record JoinGameLobby(string ClientId, string RequestId, string LobbyId, string PlayerId) : GameServerCommand(ClientId, RequestId);
     public sealed record CloseGameLobby(string ClientId, string RequestId, string LobbyId, string PlayerId) : GameServerCommand(ClientId, RequestId);
     public sealed record CreateGameSession(string ClientId, string RequestId, string LobbyId, string PlayerId) : GameServerCommand(ClientId, RequestId);
+    public sealed record ReconnectToGameSession(string ClientId, string RequestId, string SessionId, string PlayerId): GameServerCommand(ClientId, RequestId);
 }
 
 public abstract record FromServer
@@ -59,6 +60,7 @@ public abstract record GameServerEvent
     public sealed record LobbyJoined(string LobbyId, string PlayerId) : GameServerEvent;
     public sealed record LobbyClosed(string LobbyId, string[] PlayerIds) : GameServerEvent;
     public sealed record SessionCreated(string SessionId, string[] PlayerIds) : GameServerEvent;
+    public sealed record ConnectedToSession(string SessionId, string PlayerId) : GameServerEvent;
 }
 
 public abstract record GameServerError

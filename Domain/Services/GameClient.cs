@@ -7,6 +7,7 @@ public interface IGameClient
     void JoinGameLobby(string lobbyId);
     void CloseGameLobby(string lobbyId);
     void CreateGameSession(string lobbyId);
+    void ReconnectToGameSession(string sessionId);
 
     // State Queries
     string? GetLobbyId();

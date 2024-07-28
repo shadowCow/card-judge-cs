@@ -23,4 +23,9 @@ public class When
     {
         gameClient.CreateGameSession(lobbyId);
     }
+
+    public static void ClientReconnectsToGameSession(IGameClient gameClient, string sessionId)
+    {
+        gameClient.ReconnectToGameSession(sessionId);
+    }
 }

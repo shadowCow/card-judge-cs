@@ -54,6 +54,11 @@ public class TestClient : IGameClient
         server.Submit(new GameServerCommand.CreateGameSession(this.playerId, NextRequestId, lobbyId, playerId));
     }
 
+    public void ReconnectToGameSession(string sessionId)
+    {
+        server.Submit(new GameServerCommand.ReconnectToGameSession(this.playerId, NextRequestId, sessionId, playerId));
+    }
+
     public string? GetLobbyId()
     {
         return _lobbyId;

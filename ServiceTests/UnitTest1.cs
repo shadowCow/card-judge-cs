@@ -146,6 +146,19 @@ public class Tests
         });
     }
 
+    [Test]
+    public void JoinAGameSession()
+    {
+        var (host, guest, sessionId) = given.NewSystemWithATwoPlayerGameSession(player1Id, player2Id, TestGames.ticTacToeId);
+        
+        When.ClientReconnectsToGameSession(guest, sessionId);
+
+        Then.Within(Time.AShortTime).Validate(() =>
+        {
+            Validate.ClientIsInSession(guest, sessionId);
+        });
+    }
+
     // [Test]
     // public void EndAGameSession()
     // {
@@ -158,23 +171,4 @@ public class Tests
     //     // then.SessionWasAborted(result);
     // }
 
-    // [Test]
-    // public void JoinAGameSession()
-    // {
-    //     throw new NotImplementedException();
-    //     // (var service, var sessionId, var hostPlayerId) = given.ASessionExists();
-    //     // var playerId = "p2";
-
-    //     // TBD - need to decide...
-    //     // is there a 'session lobby',
-    //     // where players join and wait
-    //     // for everyone else to join?
-    //     // and once everyone has joined,
-    //     // the host can create the session?
-    //     // or in other words...
-    //     // SessionLobby can be created by the host
-    //     // without knowing the player list yet.
-    //     // GameSession must be created with
-    //     // the player list already determined.
-    // }
 }
