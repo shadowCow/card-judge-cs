@@ -18,4 +18,9 @@ public class When
     {
         gameClient.CloseGameLobby(lobbyId);
     }
+
+    public static void ClientCreatesGameSession(IGameClient gameClient, string lobbyId)
+    {
+        gameClient.CreateGameSession(lobbyId);
+    }
 }

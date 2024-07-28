@@ -37,6 +37,25 @@ public class Validate
         Assert.That(client.IsInLobby(lobbyId), Is.True);
     }
 
+    public static string ClientIsInASession(IGameClient client)
+    {
+        var sessionId = client.GetSessionId();
+        if (sessionId is null)
+        {
+            throw new AssertionException("expected client to be in a session");
+        }
+        else
+        {
+            return sessionId;
+        }
+    }
+
+
+    public static void ClientIsInSession(IGameClient client, string sessionId)
+    {
+        Assert.That(client.IsInSession(sessionId), Is.True);
+    }
+
     public static void ClientReceivedGameDoesNotExistError(IGameClient client, string gameId)
     {
         var error = client.GetLastError();

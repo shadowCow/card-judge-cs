@@ -31,6 +31,7 @@ public class TestClient : IGameClient
     
     // state
     private string? _lobbyId;
+    private string? _sessionId;
     private GameServerError? _lastError;
 
     public void CreateGameLobby(string gameId)
@@ -48,6 +49,11 @@ public class TestClient : IGameClient
         server.Submit(new GameServerCommand.CloseGameLobby(this.playerId, NextRequestId, lobbyId, playerId));
     }
 
+    public void CreateGameSession(string lobbyId)
+    {
+        server.Submit(new GameServerCommand.CreateGameSession(this.playerId, NextRequestId, lobbyId, playerId));
+    }
+
     public string? GetLobbyId()
     {
         return _lobbyId;
@@ -56,6 +62,16 @@ public class TestClient : IGameClient
     public bool IsInLobby(string lobbyId)
     {
         return _lobbyId is not null && _lobbyId == lobbyId;
+    }
+
+    public string? GetSessionId()
+    {
+        return _sessionId;
+    }
+
+    public bool IsInSession(string sessionId)
+    {
+        return _sessionId is not null && _sessionId == sessionId;
     }
 
     public GameServerError? GetLastError()
@@ -87,6 +103,10 @@ public class TestClient : IGameClient
                                     {
                                         outer._lobbyId = null;
                                     }
+                                    break;
+                                case GameServerEvent.SessionCreated sessionCreated:
+                                    outer._sessionId = sessionCreated.SessionId;
+                                    outer._lobbyId = null;
                                     break;
                                 default:
                                     throw new ArgumentException($"unrecognized GameServerEvent ${success.Evt}");

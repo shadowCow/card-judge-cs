@@ -1,3 +1,4 @@
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.DataCollection;
 using ServiceTests.Adapters;
 using ServiceTests.Gwt;
 using ServiceTests.Util;
@@ -120,6 +121,28 @@ public class Tests
         Then.Within(Time.AShortTime).Validate(() =>
         {
             Validate.ClientReceivedLobbyDoesNotExistError(host, lobbyId);
+        });
+    }
+
+    [Test]
+    public void CreateAGameSession()
+    {
+        var (host, guest, lobbyId) = given.NewSystemWithAFullTwoPlayerGameLobby(player1Id, TestGames.ticTacToeId);
+
+        When.ClientCreatesGameSession(host, lobbyId);
+
+        Then.Within(Time.AShortTime).Validate(() =>
+        {
+            var sessionId = Validate.ClientIsInASession(host);
+            Validate.ClientIsInSession(host, sessionId);
+            Validate.ClientIsInSession(guest, sessionId);
+
+            When.ClientJoinsGameLobby(guest, lobbyId);
+
+            Then.Within(Time.AShortTime).Validate(() =>
+            {
+                Validate.ClientReceivedLobbyDoesNotExistError(guest, lobbyId);
+            });
         });
     }
 

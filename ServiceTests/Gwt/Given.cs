@@ -14,6 +14,8 @@ public interface IGiven
 
     public (IGameClient client, string lobbyId) NewSystemWithAGameLobby(string playerId, string gameId);
 
+    public (IGameClient host, IGameClient guest, string lobbyId) NewSystemWithAFullTwoPlayerGameLobby(string playerId, string gameId);
+
     public (IGameClient client, string lobbyId) NewSystemWithAFullGameLobby(string playerId, string gameId);
 }
 
@@ -52,6 +54,30 @@ public class Given : IGiven
         });
 
         return (client, lobbyId);
+    }
+
+    public (IGameClient host, IGameClient guest, string lobbyId) NewSystemWithAFullTwoPlayerGameLobby(string playerId, string gameId)
+    {
+        var host = NewSystem(playerId);
+        host.CreateGameLobby(gameId);
+
+        string lobbyId = "";
+        Then.Within(Time.AShortTime).Validate(() =>
+        {
+            lobbyId = Validate.ClientIsInALobby(host);
+        });
+
+        var player2Id = "p2";
+        var guest = NewGameClient(player2Id);
+        
+        When.ClientJoinsGameLobby(guest, lobbyId);
+
+        Then.Within(Time.AShortTime).Validate(() =>
+        {
+            Validate.ClientIsInLobby(guest, lobbyId);
+        });
+
+        return (host, guest, lobbyId);
     }
 
     public (IGameClient client, string lobbyId) NewSystemWithAFullGameLobby(string playerId, string gameId)

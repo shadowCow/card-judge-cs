@@ -32,6 +32,7 @@ public abstract record GameServerCommand
     public sealed record CreateGameLobby(string ClientId, string RequestId, string GameId, string PlayerId) : GameServerCommand(ClientId, RequestId);
     public sealed record JoinGameLobby(string ClientId, string RequestId, string LobbyId, string PlayerId) : GameServerCommand(ClientId, RequestId);
     public sealed record CloseGameLobby(string ClientId, string RequestId, string LobbyId, string PlayerId) : GameServerCommand(ClientId, RequestId);
+    public sealed record CreateGameSession(string ClientId, string RequestId, string LobbyId, string PlayerId) : GameServerCommand(ClientId, RequestId);
 }
 
 public abstract record FromServer
@@ -57,6 +58,7 @@ public abstract record GameServerEvent
     public sealed record LobbyCreated(string LobbyId, string PlayerId) : GameServerEvent;
     public sealed record LobbyJoined(string LobbyId, string PlayerId) : GameServerEvent;
     public sealed record LobbyClosed(string LobbyId, string[] PlayerIds) : GameServerEvent;
+    public sealed record SessionCreated(string SessionId, string[] PlayerIds) : GameServerEvent;
 }
 
 public abstract record GameServerError
@@ -76,6 +78,7 @@ public class GameServer(
     IMessageChannel<FromServer> outbound) : IGameServer
 {
     private readonly Dictionary<string, IGameLobby> _lobbies = [];
+    private readonly Dictionary<string, IGameSession> _sessions = [];
 
     public void Submit(GameServerCommand msg)
     {
@@ -84,6 +87,7 @@ public class GameServer(
             GameServerCommand.CreateGameLobby createGameLobby => OnCreateGameLobby(createGameLobby),
             GameServerCommand.JoinGameLobby joinGameLobby => OnJoinGameLobby(joinGameLobby),
             GameServerCommand.CloseGameLobby closeGameLobby => OnCloseGameLobby(closeGameLobby),
+            GameServerCommand.CreateGameSession createGameSession => OnCreateGameSession(createGameSession),
             _ => ServerResult.Error(new GameServerError.UnknownCommand(msg.GetType().Name))
         };
 
@@ -148,6 +152,23 @@ public class GameServer(
             var playerIds = lobby.ListPlayers().ToArray();
             _lobbies.Remove(msg.LobbyId);
             return ServerResult.Success(new GameServerEvent.LobbyClosed(msg.LobbyId, playerIds));
+        }
+        else
+        {
+            return ServerResult.Error(new GameServerError.LobbyDoesNotExist(msg.LobbyId));
+        }
+    }
+
+    private ServerResult OnCreateGameSession(GameServerCommand.CreateGameSession msg)
+    {
+        if (_lobbies.TryGetValue(msg.LobbyId, out var lobby))
+        {
+            var playerIds = lobby.ListPlayers().ToArray();
+            _lobbies.Remove(msg.LobbyId);
+            
+            var sessionId = guidService.NewGuid().ToString();
+            _sessions.Add(sessionId, new GameSession(sessionId));
+            return ServerResult.Success(new GameServerEvent.SessionCreated(msg.LobbyId, playerIds));
         }
         else
         {
