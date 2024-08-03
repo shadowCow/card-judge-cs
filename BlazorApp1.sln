@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceTests", "ServiceTest
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Games", "Games\Games.csproj", "{554AB5D6-FE68-4897-8FE9-A3202C8E6800}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleClient", "ConsoleClient\ConsoleClient.csproj", "{716EEFB3-11C8-44CE-A340-CF589E5ED6CB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GamesTests", "GamesTests\GamesTests.csproj", "{CD5A3185-48FC-4150-8611-FD3A4FF9CDE8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,5 +29,13 @@ Global
 		{554AB5D6-FE68-4897-8FE9-A3202C8E6800}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{554AB5D6-FE68-4897-8FE9-A3202C8E6800}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{554AB5D6-FE68-4897-8FE9-A3202C8E6800}.Release|Any CPU.Build.0 = Release|Any CPU
+		{716EEFB3-11C8-44CE-A340-CF589E5ED6CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{716EEFB3-11C8-44CE-A340-CF589E5ED6CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{716EEFB3-11C8-44CE-A340-CF589E5ED6CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{716EEFB3-11C8-44CE-A340-CF589E5ED6CB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CD5A3185-48FC-4150-8611-FD3A4FF9CDE8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD5A3185-48FC-4150-8611-FD3A4FF9CDE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD5A3185-48FC-4150-8611-FD3A4FF9CDE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD5A3185-48FC-4150-8611-FD3A4FF9CDE8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

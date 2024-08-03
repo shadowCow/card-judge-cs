@@ -1,7 +1,8 @@
 namespace Domain.Models;
 
-public interface IGame
+public interface IGame<C, E, S>
 {
+    
     MoveResult MakeMove(string playerId, object move);
 }
 
