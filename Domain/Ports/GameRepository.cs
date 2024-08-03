@@ -4,18 +4,18 @@ namespace Domain.Ports;
 
 public interface IGameRepository
 {
-    IQueryable<Game> GetAll();
-    Game? GetById(string id);
+    IQueryable<GameDefinition> GetAll();
+    GameDefinition? GetById(string id);
 }
 
-public class InMemoryGameRepository(Game[] games) : IGameRepository
+public class InMemoryGameRepository(GameDefinition[] games) : IGameRepository
 {
-    public IQueryable<Game> GetAll()
+    public IQueryable<GameDefinition> GetAll()
     {
         return games.AsQueryable();
     }
 
-    public Game? GetById(string id)
+    public GameDefinition? GetById(string id)
     {
         return games.FirstOrDefault(x => x.Id == id);
     }

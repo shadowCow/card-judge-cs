@@ -28,4 +28,9 @@ public class When
     {
         gameClient.ReconnectToGameSession(sessionId);
     }
+
+    public static void ClientMakesAValidMove(IGameClient gameClient, string sessionId, object move)
+    {
+        gameClient.MakeMove(sessionId, move);
+    }
 }

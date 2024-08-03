@@ -33,6 +33,7 @@ public class TestClient : IGameClient
     private string? _lobbyId;
     private string? _sessionId;
     private GameServerError? _lastError;
+    private GameServerEvent? _lastEvent;
 
     public void CreateGameLobby(string gameId)
     {
@@ -57,6 +58,11 @@ public class TestClient : IGameClient
     public void ReconnectToGameSession(string sessionId)
     {
         server.Submit(new GameServerCommand.ReconnectToGameSession(this.playerId, NextRequestId, sessionId, playerId));
+    }
+
+    public void MakeMove(string sessionId, object move)
+    {
+        server.Submit(new GameServerCommand.MakeMove(this.playerId, NextRequestId, sessionId, playerId, move));
     }
 
     public string? GetLobbyId()
@@ -84,6 +90,11 @@ public class TestClient : IGameClient
         return _lastError;
     }
 
+    public GameServerEvent? GetLastEvent()
+    {
+        return _lastEvent;
+    }
+
     private class Subscriber(TestClient outer) : ISubscriber<FromServer>
     {
         public void OnMessage(FromServer msg)
@@ -95,6 +106,7 @@ public class TestClient : IGameClient
                     {
                         case CommandResult.CommandSuccess success:
                             outer._lastError = null;
+                            outer._lastEvent = success.Evt;
                             switch (success.Evt)
                             {
                                 case GameServerEvent.LobbyCreated lobbyCreated:
@@ -113,16 +125,20 @@ public class TestClient : IGameClient
                                     outer._sessionId = sessionCreated.SessionId;
                                     outer._lobbyId = null;
                                     break;
+                                case GameServerEvent.MoveCommitted moveCommitted:
+                                    break;
                                 default:
                                     throw new ArgumentException($"unrecognized GameServerEvent ${success.Evt}");
                             }
                             break;
                         case CommandResult.CommandFailure failure:
+                            outer._lastEvent = null;
                             switch (failure.Error)
                             {
                                 case GameServerError.GameDoesNotExist:
                                 case GameServerError.LobbyIsFull:
                                 case GameServerError.LobbyDoesNotExist:
+                                case GameServerError.SessionDoesNotExist:
                                 case GameServerError.UnknownCommand:
                                 case GameServerError.UnknownError:
                                     outer._lastError = failure.Error;

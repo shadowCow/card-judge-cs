@@ -97,4 +97,18 @@ public class Validate
                 break;
         }
     }
+
+    public static void ClientReceivedMoveCommittedEvent(IGameClient client, string sessionId)
+    {
+        var evt = client.GetLastEvent();
+        switch (evt)
+        {
+            case GameServerEvent.MoveCommitted moveCommitted:
+                Assert.That(moveCommitted.SessionId, Is.EqualTo(sessionId));
+                break;
+            default:
+                Assert.Fail($"expected last event to be MoveCommitted, but was {evt}");
+                break;
+        }
+    }
 }

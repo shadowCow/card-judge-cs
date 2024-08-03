@@ -159,6 +159,21 @@ public class Tests
         });
     }
 
+    [Test]
+    public void MakeAValidMove()
+    {
+        var (host, guest, sessionId) = given.NewSystemWithATwoPlayerGameSession(player1Id, player2Id, TestGames.ticTacToeId);
+        var move = new object();
+
+        When.ClientMakesAValidMove(host, sessionId, move);
+
+        Then.Within(Time.AShortTime).Validate(() =>
+        {
+            Validate.ClientReceivedMoveCommittedEvent(host, sessionId);
+            Validate.ClientReceivedMoveCommittedEvent(guest, sessionId);
+        });
+    }
+
     // [Test]
     // public void EndAGameSession()
     // {

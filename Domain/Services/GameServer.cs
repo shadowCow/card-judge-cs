@@ -34,6 +34,7 @@ public abstract record GameServerCommand
     public sealed record CloseGameLobby(string ClientId, string RequestId, string LobbyId, string PlayerId) : GameServerCommand(ClientId, RequestId);
     public sealed record CreateGameSession(string ClientId, string RequestId, string LobbyId, string PlayerId) : GameServerCommand(ClientId, RequestId);
     public sealed record ReconnectToGameSession(string ClientId, string RequestId, string SessionId, string PlayerId): GameServerCommand(ClientId, RequestId);
+    public sealed record MakeMove(string ClientId, string RequestId, string SessionId, string PlayerId, object Move) : GameServerCommand(ClientId, RequestId);
 }
 
 public abstract record FromServer
@@ -61,6 +62,7 @@ public abstract record GameServerEvent
     public sealed record LobbyClosed(string LobbyId, string[] PlayerIds) : GameServerEvent;
     public sealed record SessionCreated(string SessionId, string[] PlayerIds) : GameServerEvent;
     public sealed record ConnectedToSession(string SessionId, string PlayerId) : GameServerEvent;
+    public sealed record MoveCommitted(string SessionId, string PlayerId, object move, string nextTurnPlayerId, GameStatus status) : GameServerEvent;
 }
 
 public abstract record GameServerError
@@ -72,6 +74,9 @@ public abstract record GameServerError
     public sealed record GameDoesNotExist(string GameId) : GameServerError;
     public sealed record LobbyIsFull(string LobbyId) : GameServerError;
     public sealed record LobbyDoesNotExist(string LobbyId) : GameServerError;
+    public sealed record SessionDoesNotExist(string SessionId) : GameServerError;
+    public sealed record InvalidMove(string SessionId, string Reason) : GameServerError;
+    public sealed record MoveOutOfTurn(string SessionId, string PlayerId) : GameServerError;
 }
 
 public class GameServer(
@@ -90,6 +95,7 @@ public class GameServer(
             GameServerCommand.JoinGameLobby joinGameLobby => OnJoinGameLobby(joinGameLobby),
             GameServerCommand.CloseGameLobby closeGameLobby => OnCloseGameLobby(closeGameLobby),
             GameServerCommand.CreateGameSession createGameSession => OnCreateGameSession(createGameSession),
+            GameServerCommand.MakeMove makeMove => OnMakeMove(makeMove),
             _ => ServerResult.Error(new GameServerError.UnknownCommand(msg.GetType().Name))
         };
 
@@ -170,11 +176,29 @@ public class GameServer(
             
             var sessionId = guidService.NewGuid().ToString();
             _sessions.Add(sessionId, new GameSession(sessionId));
-            return ServerResult.Success(new GameServerEvent.SessionCreated(msg.LobbyId, playerIds));
+            return ServerResult.Success(new GameServerEvent.SessionCreated(sessionId, playerIds));
         }
         else
         {
             return ServerResult.Error(new GameServerError.LobbyDoesNotExist(msg.LobbyId));
+        }
+    }
+
+    private ServerResult OnMakeMove(GameServerCommand.MakeMove msg)
+    {
+        if (_sessions.TryGetValue(msg.SessionId, out var session))
+        {
+            var result = session.MakeMove(msg.PlayerId, msg.Move);
+            return result switch
+            {
+                MoveResult.MoveCommitted moveCommitted => ServerResult.Success(new GameServerEvent.MoveCommitted(msg.SessionId, msg.PlayerId, msg.Move, moveCommitted.nextTurnPlayerId, moveCommitted.status)),
+                MoveResult.MoveFailed moveFailed => ServerResult.Error(new GameServerError.InvalidMove(msg.SessionId, moveFailed.reason)),
+                _ => ServerResult.Error(new GameServerError.UnknownError($"unknown MoveResult {result}"))
+            };
+        }
+        else
+        {
+            return ServerResult.Error(new GameServerError.SessionDoesNotExist(msg.SessionId));
         }
     }
 

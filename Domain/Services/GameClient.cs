@@ -8,6 +8,7 @@ public interface IGameClient
     void CloseGameLobby(string lobbyId);
     void CreateGameSession(string lobbyId);
     void ReconnectToGameSession(string sessionId);
+    void MakeMove(string sessionId, object move);
 
     // State Queries
     string? GetLobbyId();
@@ -15,4 +16,5 @@ public interface IGameClient
     string? GetSessionId();
     bool IsInSession(string sessionId);
     GameServerError? GetLastError();
+    GameServerEvent? GetLastEvent();
 }
