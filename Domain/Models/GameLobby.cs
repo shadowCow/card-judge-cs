@@ -26,7 +26,7 @@ public abstract record GameLobbyError
 
 public sealed class GameLobby(string id, string gameId, int maxPlayers, string hostPlayerId) : IGameLobby
 {
-    private readonly HashSet<string> playerIds = [hostPlayerId];
+    private readonly System.Collections.Generic.HashSet<string> playerIds = [hostPlayerId];
 
     public GameLobbyError? Join(string playerId)
     {

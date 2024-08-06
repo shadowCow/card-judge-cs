@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleClient", "ConsoleCli
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GamesTests", "GamesTests\GamesTests.csproj", "{CD5A3185-48FC-4150-8611-FD3A4FF9CDE8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DomainTests", "DomainTests\DomainTests.csproj", "{1091FEF5-53BE-4DF8-A8AC-12ABE979AC03}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{C94642E5-262C-4CAD-9FE7-494D4D00BCEB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,5 +41,13 @@ Global
 		{CD5A3185-48FC-4150-8611-FD3A4FF9CDE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CD5A3185-48FC-4150-8611-FD3A4FF9CDE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CD5A3185-48FC-4150-8611-FD3A4FF9CDE8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1091FEF5-53BE-4DF8-A8AC-12ABE979AC03}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1091FEF5-53BE-4DF8-A8AC-12ABE979AC03}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1091FEF5-53BE-4DF8-A8AC-12ABE979AC03}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1091FEF5-53BE-4DF8-A8AC-12ABE979AC03}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C94642E5-262C-4CAD-9FE7-494D4D00BCEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C94642E5-262C-4CAD-9FE7-494D4D00BCEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C94642E5-262C-4CAD-9FE7-494D4D00BCEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C94642E5-262C-4CAD-9FE7-494D4D00BCEB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -1,84 +1,18 @@
+using System.Reflection.Metadata;
 using Domain.Services;
 
 namespace ConsoleClient;
 
+
+
 public class Client
 {
-    public static void Run(
-        Func<Option<User>> authenticator,
-        Action<Command> toServer)
+    public static Seq<string> OnServerResponse(Either<ServerError, ServerEvent> response)
     {
-        Seq<string> chattyToServer(Command c)
-        {
-            toServer(c);
-            return Seq([$"Sent {c} to server."]);
-        }
-        
-        while (true)
-        {
-            var i = Console.ReadLine();
-            if (i is null)
-            {
-                return;
-            }
-
-            authenticator()
-                .Bind(u => ParseCommand(i, u))
-                .Match(
-                    chattyToServer,
-                    HelpText
-                )
-                .Iter(Console.WriteLine);
-        }
+        return Seq<string>([]);
     }
 
-    private static Option<Command> ParseCommand(Option<string> input, User user)
-    {
-        return input
-            .Bind(NiceSplit)
-            .Bind(sc => Parse(sc, user));
-    }
-
-    private static readonly char[] whitespace = [' ', '\t', '\n'];
-    private static Option<StringCommand> NiceSplit(string s)
-    {
-        var split = s.Split(whitespace, StringSplitOptions.RemoveEmptyEntries);
-        if (split.Length == 0)
-        {
-            return None;
-        }
-        else
-        {
-            return new StringCommand(split[0], split.Skip(1).ToArray());
-        }
-    }
-
-    private static Option<Command> Parse(StringCommand c, User user)
-    {
-        return c.Command.ToLower() switch 
-        {
-            "createroom" => ParseCreateRoom(c.Args, user),
-            "joinroom" => ParseJoinRoom(c.Args, user),
-            _ => None,
-        };
-    }
-
-    private static Option<Command> ParseCreateRoom(string [] args, User user)
-    {
-        return Some(new Command.CreateRoom(user.Id))
-            .Map(c => (Command)c);
-    }
-
-    private static Option<Command> ParseJoinRoom(string [] args, User user)
-    {
-        return args.HeadOrNone()
-            .Map(roomId => new Command.JoinRoom(roomId, user.Id))
-            .Map(c => (Command)c);
-    }
-
-    private record StringCommand(string Command, string[] Args);
-
-    private static Seq<string> HelpText()
+    public static Seq<string> HelpText()
     {
         return Seq(["usage goes here"]);
     }
@@ -88,23 +22,68 @@ public class Client
     );
 }
 
-public abstract record AuthenticationError
-{
-    private AuthenticationError() {}
-
-    public sealed record AuthenticationFailed() : AuthenticationError;
-}
-
 public record User(string Id);
 
-public class ClientFst
+public class ClientFst(ClientState initialState)
 {
+    private ClientState currentState = initialState;
 
+    public Seq<ClientEffect> OnInput(ClientInput i)
+    {
+        (var nextState, var effects) = Transition(currentState, i);
+        currentState = nextState;
+        return effects;
+    }
+
+    private static (ClientState nextS, Seq<ClientEffect> es) Transition(ClientState s, ClientInput i)
+    {
+        return i switch
+        {
+            ClientInput.CommandSubmitted cs => HandleCommandSubmitted(s, cs),
+            ClientInput.EventOccurred eo => HandleEventOccurred(s, eo),
+            _ => (s, Seq<ClientEffect>()),
+        };
+    }
+
+    private static (ClientState nextS, Seq<ClientEffect> es) HandleCommandSubmitted(ClientState s, ClientInput.CommandSubmitted i)
+    {
+        return s switch
+        {
+            
+        };
+    }
+
+    private static (ClientState nextS, Seq<ClientEffect> es) HandleEventOccurred(ClientState s, ClientInput.EventOccurred i)
+    {
+        return s switch
+        {
+            
+        };
+    }
 }
 
-public abstract record ClientInput()
+public abstract record ClientInput
 {
+    private ClientInput() {}
 
+    public sealed record CommandSubmitted(Command Command) : ClientInput;
+    public sealed record EventOccurred(ClientEvent Event) : ClientInput;
+}
+
+public abstract record ClientState
+{
+    private ClientState() {}
+
+    public sealed record NotInRoom(User User) : ClientState;
+    public sealed record InRoom(User User, string RoomId) : ClientState;
+}
+
+public abstract record ClientEffect
+{
+    private ClientEffect() {}
+
+    public sealed record ToUser(Seq<string> Output) : ClientEffect;
+    public sealed record ToServer(Command Command) : ClientEffect;
 }
 
 public abstract record Command
@@ -113,6 +92,13 @@ public abstract record Command
 
     public sealed record CreateRoom(string PlayerId) : Command;
     public sealed record JoinRoom(string RoomId, string PlayerId) : Command;
+}
+
+public abstract record ClientEvent
+{
+    private ClientEvent() {}
+    public sealed record RoomCreated(string RoomId) : ClientEvent;
+    public sealed record RoomJoined(string RoomId) : ClientEvent;
 }
 
 public abstract record ServerEvent
@@ -153,6 +139,55 @@ public record ServerState(Map<string, Room> RoomsById)
             () => Left<ServerError, ServerEvent>(new ServerError.RoomDoesNotExist(c.RoomId))
         );
     }
+
+    public static ServerState Apply(ServerState s, ServerEvent e)
+    {
+        return e switch
+        {
+            ServerEvent.RoomCreated rc => ApplyRoomCreated(s, rc),
+            ServerEvent.RoomJoined rj => ApplyRoomJoined(s, rj),
+            _ => s,
+        };
+    }
+
+    private static ServerState ApplyRoomCreated(ServerState s, ServerEvent.RoomCreated e)
+    {
+        return s with { RoomsById = s.RoomsById.Add(e.RoomId, new Room(e.RoomId, Seq([e.PlayerId])))};
+    }
+
+    private static ServerState ApplyRoomJoined(ServerState s, ServerEvent.RoomJoined e)
+    {
+        return s with { RoomsById = s.RoomsById.Map((k, v) => {
+            if (k == e.RoomId)
+            {
+                return v.WithUser(e.PlayerId);
+            }
+            else
+            {
+                return v;
+            }
+        })};
+    }
 };
 
-public record Room(string Id);
+public record Room(string Id, Seq<string> UserIds)
+{
+    public Room WithUser(string userId)
+    {
+        return this with { UserIds = UserIds.Add(userId) };
+    }
+}
+
+public class EmbeddedServer(ServerState initialState, Func<string> idGenerator)
+{
+    private ServerState currentState = initialState;
+
+    public Either<ServerError, ServerEvent> OnCommand(Command c)
+    {
+        return ServerState.OnCommand(currentState, c, idGenerator)
+            .Map(evt => {
+                currentState = ServerState.Apply(currentState, evt);
+                return evt;
+            });
+    }
+}
