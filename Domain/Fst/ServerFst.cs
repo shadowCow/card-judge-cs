@@ -2,6 +2,19 @@ namespace Domain.Fst;
 
 public static class ServerFst
 {
+    public static Fst<ServerState, ServerCommand, ServerEvent, ServerError, ServerContext> Create(
+        ServerContext context,
+        ServerState initialState
+    )
+    {
+        return new Fst<ServerState, ServerCommand, ServerEvent, ServerError, ServerContext>(
+            HandleCommand,
+            Transition,
+            context,
+            initialState
+        );
+    }
+
     public static Either<ServerError, ServerEvent> HandleCommand(ServerState s, ServerCommand c, ServerContext context)
     {
         return c switch
@@ -96,7 +109,7 @@ public abstract record ServerError
     public sealed record RoomDoesNotExist(string RoomId) : ServerError;
 }
 
-public record ServerState(Map<string, Room> RoomsById) {}
+public record ServerState(Map<string, Room> RoomsById);
 
 public record Room(string Id, Seq<string> UserIds)
 {
