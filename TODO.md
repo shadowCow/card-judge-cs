@@ -1,10 +1,12 @@
 # TODO
 
-- Make Validate return a Task or whatever so that we can 'await' it.
+- Move TestClient into Domain as just 'GameClient'
+- Change 'GameClient' interface to have a single method for submitting commands
+  Make a command for each existing action method on the IGameClient interface.
+- Does 'IGameClient' need to subscribable?
+  So that UI can update in response to events?
 
-- Fill in more tests.
-
-  - End a session
+- Make Validate return a Task or whatever so that we can 'await' it?
 
 - Make tic-tac-toe rules.
 
