@@ -1,8 +1,7 @@
 # TODO
 
-- Move TestClient into Domain as just 'GameClient'
-- Change 'GameClient' interface to have a single method for submitting commands
-  Make a command for each existing action method on the IGameClient interface.
+- Finish implementing ServiceTests for new Room-based model.
+
 - Does 'IGameClient' need to subscribable?
   So that UI can update in response to events?
 
