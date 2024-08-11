@@ -1,5 +1,8 @@
 namespace Domain.Fst;
 
+using Domain.Ports;
+using ServerResult = Either<ServerError, ServerEvent>;
+
 public static class ServerFst
 {
     public static Fst<ServerState, ServerCommand, ServerEvent, ServerError, ServerContext> Create(
@@ -15,23 +18,23 @@ public static class ServerFst
         );
     }
 
-    public static Either<ServerError, ServerEvent> HandleCommand(ServerState s, ServerCommand c, ServerContext context)
+    public static ServerResult HandleCommand(ServerState s, ServerCommand c, ServerContext context)
     {
         return c switch
         {
-            ServerCommand.CreateRoom cr => OnCreateRoom(s, cr, context.IdGenerator),
+            ServerCommand.CreateRoom cr => OnCreateRoom(s, cr, context),
             ServerCommand.JoinRoom jr => OnJoinRoom(s, jr),
             ServerCommand.CloseRoom cr => OnCloseRoom(s, cr),
             _ => Left<ServerError, ServerEvent>(new ServerError.UnknownCommand(c.GetType().Name)),
         };
     }
 
-    private static Either<ServerError, ServerEvent> OnCreateRoom(ServerState s, ServerCommand.CreateRoom c, Func<string> idGenerator)
+    private static ServerResult OnCreateRoom(ServerState s, ServerCommand.CreateRoom c, ServerContext ctx)
     {
-        return Right<ServerError, ServerEvent>(new ServerEvent.RoomCreated(c.PlayerId, idGenerator()));
+        return Right<ServerError, ServerEvent>(new ServerEvent.RoomCreated(c.PlayerId, ctx.GuidService.NewGuid().ToString()));
     }
 
-    private static Either<ServerError, ServerEvent> OnJoinRoom(ServerState s, ServerCommand.JoinRoom c)
+    private static ServerResult OnJoinRoom(ServerState s, ServerCommand.JoinRoom c)
     {
         return s.RoomsById.Find(c.RoomId).Match(
             r => Right<ServerError, ServerEvent>(new ServerEvent.RoomJoined(c.RoomId, c.PlayerId)),
@@ -39,7 +42,7 @@ public static class ServerFst
         );
     }
 
-    private static Either<ServerError, ServerEvent> OnCloseRoom(ServerState s, ServerCommand.CloseRoom c)
+    private static ServerResult OnCloseRoom(ServerState s, ServerCommand.CloseRoom c)
     {
         return s.RoomsById.Find(c.RoomId).Match(
             r => Right<ServerError, ServerEvent>(new ServerEvent.RoomClosed(c.RoomId, c.PlayerId)),
@@ -83,7 +86,7 @@ public static class ServerFst
     }
 }
 
-public record ServerContext(Func<string> IdGenerator) {}
+public record ServerContext(IGuidService GuidService) {}
 
 public abstract record ServerCommand
 {
@@ -92,6 +95,7 @@ public abstract record ServerCommand
     public sealed record CreateRoom(string PlayerId) : ServerCommand();
     public sealed record JoinRoom(string RoomId, string PlayerId) : ServerCommand();
     public sealed record CloseRoom(string RoomId, string PlayerId) : ServerCommand();
+    public sealed record LeaveRoom(string RoomId, string PlayerId) : ServerCommand();
 }
 
 public abstract record ServerEvent
@@ -100,6 +104,7 @@ public abstract record ServerEvent
     public sealed record RoomCreated(string RoomId, string PlayerId) : ServerEvent;
     public sealed record RoomJoined(string RoomId, string PlayerId) : ServerEvent;
     public sealed record RoomClosed(string RoomId, string PlayerId) : ServerEvent;
+    public sealed record RoomLeft(string RoomId, string PlayerId) : ServerEvent;
 }
 
 public abstract record ServerError

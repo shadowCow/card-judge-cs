@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using ServiceTests.Util;
 
 namespace ServiceTests.Gwt;
 
@@ -7,6 +8,11 @@ public class Then
     public static Within Within(TimeSpan timeSpan)
     {
         return new(timeSpan);
+    }
+
+    public static Within WithinAShortTime()
+    {
+        return new(Time.AShortTime);
     }
 }
 

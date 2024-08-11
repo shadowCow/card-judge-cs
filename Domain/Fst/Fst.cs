@@ -14,9 +14,12 @@ public class Fst<TState, TCommand, TEvent, TError, TContext>(
     public Either<TError, TEvent> HandleCommand(TCommand c)
     {
         return commandHandler(_currentState, c, context)
-            .Do(evt => {
-                _currentState = transition(_currentState, evt);
-            });
+            .Do(ApplyEvent);
+    }
+
+    public void ApplyEvent(TEvent e)
+    {
+        _currentState = transition(_currentState, e);
     }
 
     public TState GetState()

@@ -1,4 +1,5 @@
 
+using Domain.Adapters;
 using Domain.Fst;
 using FluentAssertions;
 
@@ -11,10 +12,9 @@ public class YourClassNameTests
     public void CreateARoom()
     {
         // Arrange
-        var id = "1";
-        var idGenerator = () => id;
+        var id = GuidServiceFixed.allZeroGuid;
         var serverFst = ServerFst.Create(
-            new ServerContext(idGenerator),
+            new ServerContext(GuidServiceFixed.AllZero()),
             new ServerState([])
         );
         var playerId = "p1";
@@ -31,14 +31,12 @@ public class YourClassNameTests
     public void JoinARoom()
     {
         // Arrange
-        var id = "1";
-        var idGenerator = () => id;
         var playerId = "p1";
         var player2Id = "p2";
-        var roomId = "1";
+        var roomId = GuidServiceFixed.allZeroGuid;
         var serverFst = ServerFst.Create(
-            new ServerContext(idGenerator),
-            new ServerState(Map((id, new Room(roomId, Seq<string>([playerId])))))
+            new ServerContext(GuidServiceFixed.AllZero()),
+            new ServerState(Map((roomId, new Room(roomId, Seq<string>([playerId])))))
         );
 
         // Act
@@ -53,14 +51,12 @@ public class YourClassNameTests
     public void JoinANonExistentRoom()
     {
         // Arrange
-        var id = "1";
-        var idGenerator = () => id;
         var playerId = "p1";
         var player2Id = "p2";
-        var roomId = "1";
+        var roomId = GuidServiceFixed.allZeroGuid;
         var noSuchRoomId = "no-such-room";
         var serverFst = ServerFst.Create(
-            new ServerContext(idGenerator),
+            new ServerContext(GuidServiceFixed.AllZero()),
             new ServerState(Map((roomId, new Room(roomId, Seq<string>([playerId])))))
         );
 
@@ -76,12 +72,10 @@ public class YourClassNameTests
     public void CloseARoom()
     {
         // Arrange
-        var id = "1";
-        var idGenerator = () => id;
         var playerId = "p1";
-        var roomId = id;
+        var roomId = GuidServiceFixed.allZeroGuid;
         var serverFst = ServerFst.Create(
-            new ServerContext(idGenerator),
+            new ServerContext(GuidServiceFixed.AllZero()),
             new ServerState(Map((roomId, new Room(roomId, Seq<string>([playerId])))))
         );
 
@@ -92,5 +86,4 @@ public class YourClassNameTests
         var expectedResult = Right<ServerError, ServerEvent>(new ServerEvent.RoomClosed(roomId, playerId));
         result.Should().BeEquivalentTo(expectedResult);
     }
-
 }
