@@ -1,35 +1,71 @@
 namespace Domain.Services;
 
-public interface IGameClient
+public class GameClient : IGameClient
 {
-    void Submit(GameClientCommand c);
+    public void Submit(GameClientCommand c)
+    {
+        throw new NotImplementedException();
+    }
 
-    // Actions
-    void CreateGameLobby(string gameId);
-    void JoinGameLobby(string lobbyId);
-    void CloseGameLobby(string lobbyId);
-    void CreateGameSession(string lobbyId);
-    void ReconnectToGameSession(string sessionId);
-    void MakeMove(string sessionId, object move);
+    public void CloseGameLobby(string lobbyId)
+    {
+        throw new NotImplementedException();
+    }
 
-    // State Queries
-    string? GetLobbyId();
-    bool IsInLobby(string lobbyId);
-    string? GetSessionId();
-    bool IsInSession(string sessionId);
-    GameServerError? GetLastError();
-    GameServerEvent? GetLastEvent();
-}
+    public void CreateGameLobby(string gameId)
+    {
+        throw new NotImplementedException();
+    }
 
-public abstract record GameClientCommand
-{
-    private GameClientCommand() {}
+    public void CreateGameSession(string lobbyId)
+    {
+        throw new NotImplementedException();
+    }
 
-    public sealed record CreateGameRoom() : GameClientCommand;
-    public sealed record JoinGameRoom(string RoomId) : GameClientCommand;
-    public sealed record CloseGameRoom() : GameClientCommand;
-    public sealed record ListAvailableGames() : GameClientCommand;
-    public sealed record SelectGame(string GameId) : GameClientCommand;
-    public sealed record StartGameSession() : GameClientCommand;
-    public sealed record MakeMove(object Move) : GameClientCommand;
+    public GameServerError? GetLastError()
+    {
+        throw new NotImplementedException();
+    }
+
+    public GameServerEvent? GetLastEvent()
+    {
+        throw new NotImplementedException();
+    }
+
+    public string? GetLobbyId()
+    {
+        throw new NotImplementedException();
+    }
+
+    public string? GetSessionId()
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool IsInLobby(string lobbyId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool IsInSession(string sessionId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void JoinGameLobby(string lobbyId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void MakeMove(string sessionId, object move)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void ReconnectToGameSession(string sessionId)
+    {
+        throw new NotImplementedException();
+    }
+
+    
 }

@@ -18,4 +18,9 @@ public class Fst<TState, TCommand, TEvent, TError, TContext>(
                 _currentState = transition(_currentState, evt);
             });
     }
+
+    public TState GetState()
+    {
+        return _currentState;
+    }
 }

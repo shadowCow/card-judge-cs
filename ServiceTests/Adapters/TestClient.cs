@@ -95,6 +95,11 @@ public class TestClient : IGameClient
         return _lastEvent;
     }
 
+    public void Submit(GameClientCommand c)
+    {
+        throw new NotImplementedException();
+    }
+
     private class Subscriber(TestClient outer) : ISubscriber<FromServer>
     {
         public void OnMessage(FromServer msg)

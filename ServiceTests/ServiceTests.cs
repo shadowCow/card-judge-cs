@@ -1,11 +1,10 @@
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.DataCollection;
 using ServiceTests.Adapters;
 using ServiceTests.Gwt;
 using ServiceTests.Util;
 
 namespace ServiceTests;
 
-public class Tests
+public class ServiceTests
 {
     // TODO - IGiven implementation would be determined by test configuration and injected.
     private readonly IGiven given = new Given();
