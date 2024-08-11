@@ -13,6 +13,8 @@ public interface IGiven
     public IGameClient NewSystem(string playerId);
 
     public IGameClient NewGameClient(string playerId);
+
+    public (IGameClient client, string roomId) NewSystemWithARoom(string playerId);
 }
 
 public class Given : IGiven
@@ -45,5 +47,20 @@ public class Given : IGiven
             throw new InvalidOperationException("broadcast and server must be initialized before you can create a new game client");
         }
         return new GameClient(playerId, new ChannelToServer(server), this.broadcast, new GuidServiceSystem());
+    }
+
+    public (IGameClient client, string roomId) NewSystemWithARoom(string playerId)
+    {
+        var client = NewSystem(playerId);
+
+        When.ClientCommand(client, new ClientCommand.CreateRoom());
+
+        var roomId = "";
+        Then.WithinAShortTime().Validate(() =>
+        {
+            roomId = Validate.ClientIsInARoom(client);
+        });
+
+        return (client, roomId);
     }
 }

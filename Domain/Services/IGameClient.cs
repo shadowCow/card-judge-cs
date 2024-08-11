@@ -6,4 +6,5 @@ public interface IGameClient
 
     // state queries
     string? GetRoomId();
+    ClientError? GetLastError();
 }

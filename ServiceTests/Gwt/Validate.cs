@@ -18,6 +18,32 @@ public class Validate
         }
     }
 
+    public static void ClientHasInvalidCommandStateError(IGameClient client)
+    {
+        var error = client.GetLastError();
+        switch (error)
+        {
+            case ClientError.InvalidCommandState e:
+                break;
+            default:
+                Assert.Fail($"expected last error to be InvalidCommandState, but was ${error}");
+                break;
+        }
+    }
+
+    public static void ClientHasRoomLimitExceededError(IGameClient client)
+    {
+        var error = client.GetLastError();
+        switch (error)
+        {
+            case ClientError.RoomLimitExceeded e:
+                break;
+            default:
+                Assert.Fail($"expected last error to be RoomLimitExceeded, but was ${error}");
+                break;
+        }
+    }
+
     // public static void ClientReceivedGameDoesNotExistError(IGameClient client, string gameId)
     // {
     //     var error = client.GetLastError();

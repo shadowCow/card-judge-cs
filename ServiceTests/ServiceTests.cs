@@ -32,4 +32,17 @@ public class ServiceTests
         });
     }
 
+    [Test]
+    public void CannotCreateTwoRoomsAtOnce()
+    {
+        (var client, var roomId) = given.NewSystemWithARoom(player1Id);
+
+        When.ClientCommand(client, new ClientCommand.CreateRoom());
+
+        Then.WithinAShortTime().Validate(() =>
+        {
+            Validate.ClientHasInvalidCommandStateError(client);
+        });
+    }
+
 }

@@ -12,6 +12,7 @@ public class GameClient : IGameClient
     private readonly GameClientFst _fst;
     private readonly IMessageChannel<ToServer> _outbound;
     private readonly IGuidService _guidService;
+    private ClientError? _lastError;
     
     public GameClient(
         string playerId,
@@ -56,7 +57,7 @@ public class GameClient : IGameClient
 
     private void OnError(ClientError err)
     {
-        // TODO - stays local, but should 'display'
+        _lastError = err;
     }
 
     public string? GetRoomId()
@@ -67,6 +68,11 @@ public class GameClient : IGameClient
             ClientState.GuestInRoom s => s.RoomId,
             _ => null,
         };
+    }
+
+    public ClientError? GetLastError()
+    {
+        return _lastError;
     }
 
     private class Subscriber(GameClient outer) : ISubscriber<FromServer>
@@ -103,7 +109,7 @@ public class GameClient : IGameClient
 
         private void OnCommandFailure(FromServer.CommandFailure cf)
         {
-
+            outer._lastError = new ClientError.RoomLimitExceeded();
         }
 
         private void OnNotification(FromServer.Notification n)
