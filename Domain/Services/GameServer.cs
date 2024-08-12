@@ -14,21 +14,25 @@ public class GameServer : IGameServer
     private readonly IGuidService _guidService;
     private readonly IGameRepository _gameRepo;
     private readonly IMessageChannel<FromServer> _outbound;
+    private readonly ILogger _logger;
 
     public GameServer(
         IGuidService guidService,
         IGameRepository gameRepo,
-        IMessageChannel<FromServer> outbound)
+        IMessageChannel<FromServer> outbound,
+        ILogger logger)
     {
         _guidService = guidService;
         _gameRepo = gameRepo;
         _outbound = outbound;
+        _logger = logger;
 
         _fst = ServerFst.Create(new ServerContext(_guidService), new ServerState(Empty));
     }
 
     public void Submit(ToServer msg)
     {
+        _logger.Info($"GameServer received: {msg}");
         switch (msg)
         {
             case ToServer.Command cmd:
@@ -55,6 +59,7 @@ public class GameServer : IGameServer
         var fromServer = evt switch
         {
             ServerEvent.RoomCreated rc => Some<FromServer>(new FromServer.CommandSuccess(requestId, evt)),
+            ServerEvent.RoomJoined rj => Some<FromServer>(new FromServer.CommandSuccess(requestId, evt)),
             _ => None,
         };
 
@@ -68,6 +73,7 @@ public class GameServer : IGameServer
 
     private void Send(FromServer msg)
     {
+        _logger.Info($"GameServer sending: {msg}");
         _outbound.HandleMessage(msg);
     }
 }

@@ -12,18 +12,21 @@ public class GameClient : IGameClient
     private readonly GameClientFst _fst;
     private readonly IMessageChannel<ToServer> _outbound;
     private readonly IGuidService _guidService;
+    private readonly ILogger _logger;
     private ClientError? _lastError;
     
     public GameClient(
         string playerId,
         IMessageChannel<ToServer> outbound,
         ISubscribable<FromServer> inbound,
-        IGuidService guidService)
+        IGuidService guidService,
+        ILogger logger)
     {
         _playerId = playerId;
         _fst = ClientFst.Create(new ClientContext(), new ClientState.NotInRoom(playerId));
         _outbound = outbound;
         _guidService = guidService;
+        _logger = logger;
 
         inbound.Subscribe(new Subscriber(this));
     }
@@ -44,14 +47,15 @@ public class GameClient : IGameClient
             ClientEvent.RequestedCreateRoom e =>
                 Some<ToServer>(new ToServer.Command(_guidService.NewGuid().ToString(), new ServerCommand.CreateRoom(_playerId))),
             ClientEvent.RequestedJoinRoom e =>
-                Some<ToServer>(new ToServer.Command(_guidService.NewGuid().ToString(), new ServerCommand.JoinRoom(_playerId, e.RoomId))),
+                Some<ToServer>(new ToServer.Command(_guidService.NewGuid().ToString(), new ServerCommand.JoinRoom(e.RoomId, _playerId))),
             ClientEvent.RequestedCloseRoom e =>
-                Some<ToServer>(new ToServer.Command(_guidService.NewGuid().ToString(), new ServerCommand.CloseRoom(_playerId, e.RoomId))),
+                Some<ToServer>(new ToServer.Command(_guidService.NewGuid().ToString(), new ServerCommand.CloseRoom(e.RoomId, _playerId))),
             ClientEvent.RequestedLeaveRoom e =>
-                Some<ToServer>(new ToServer.Command(_guidService.NewGuid().ToString(), new ServerCommand.LeaveRoom(_playerId, e.RoomId))),
+                Some<ToServer>(new ToServer.Command(_guidService.NewGuid().ToString(), new ServerCommand.LeaveRoom(e.RoomId, _playerId))),
             _ => None,
         };
 
+        _logger.Info($"GameClient sending {serverCommand}");
         serverCommand.Iter(_outbound.HandleMessage);
     }
 
@@ -79,6 +83,7 @@ public class GameClient : IGameClient
     {
         public void OnMessage(FromServer msg)
         {
+            outer._logger.Info($"GameClient received {msg}");
             switch (msg)
             {
                 case FromServer.CommandSuccess cs:
@@ -101,6 +106,9 @@ public class GameClient : IGameClient
             {
                 case ServerEvent.RoomCreated rc:
                     outer._fst.ApplyEvent(new ClientEvent.RoomCreated(rc.RoomId));
+                    break;
+                case ServerEvent.RoomJoined rj:
+                    outer._fst.ApplyEvent(new ClientEvent.RoomJoined(rj.RoomId));
                     break;
                 default:
                     break;

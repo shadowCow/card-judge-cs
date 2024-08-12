@@ -31,7 +31,7 @@ public static class ServerFst
 
     private static ServerResult OnCreateRoom(ServerState s, ServerCommand.CreateRoom c, ServerContext ctx)
     {
-        return Right<ServerError, ServerEvent>(new ServerEvent.RoomCreated(c.PlayerId, ctx.GuidService.NewGuid().ToString()));
+        return Right<ServerError, ServerEvent>(new ServerEvent.RoomCreated(ctx.GuidService.NewGuid().ToString(), c.PlayerId));
     }
 
     private static ServerResult OnJoinRoom(ServerState s, ServerCommand.JoinRoom c)

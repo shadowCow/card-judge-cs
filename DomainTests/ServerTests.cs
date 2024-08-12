@@ -23,7 +23,7 @@ public class YourClassNameTests
         var result = serverFst.HandleCommand(new ServerCommand.CreateRoom(playerId));
 
         // Assert
-        var expectedResult = Right<ServerError, ServerEvent>(new ServerEvent.RoomCreated(playerId, id));
+        var expectedResult = Right<ServerError, ServerEvent>(new ServerEvent.RoomCreated(id, playerId));
         result.Should().BeEquivalentTo(expectedResult);
     }
 

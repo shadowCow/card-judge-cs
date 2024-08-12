@@ -18,6 +18,20 @@ public class Validate
         }
     }
 
+    public static void ClientIsInRoom(IGameClient client, string expectedRoomId)
+    {
+        var roomId = client.GetRoomId();
+        if (string.IsNullOrWhiteSpace(roomId))
+        {
+            
+            throw new AssertionException("expected client to be in a room");
+        }
+        else
+        {
+            Assert.That(roomId, Is.EqualTo(expectedRoomId));
+        }
+    }
+
     public static void ClientHasInvalidCommandStateError(IGameClient client)
     {
         var error = client.GetLastError();

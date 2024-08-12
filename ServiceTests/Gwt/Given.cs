@@ -17,7 +17,7 @@ public interface IGiven
     public (IGameClient client, string roomId) NewSystemWithARoom(string playerId);
 }
 
-public class Given : IGiven
+public class Given(Func<ILogger> loggerFactory) : IGiven
 {
     private Broadcast<FromServer>? broadcast;
     private GameServer? server;
@@ -35,7 +35,7 @@ public class Given : IGiven
     public IGameClient NewSystem(string playerId)
     {
         this.broadcast = new();
-        this.server = new GameServer(new GuidServiceSystem(), gameRepo, this.broadcast);
+        this.server = new GameServer(new GuidServiceSystem(), gameRepo, this.broadcast, loggerFactory());
 
         return NewGameClient(playerId);
     }
@@ -46,7 +46,7 @@ public class Given : IGiven
         {
             throw new InvalidOperationException("broadcast and server must be initialized before you can create a new game client");
         }
-        return new GameClient(playerId, new ChannelToServer(server), this.broadcast, new GuidServiceSystem());
+        return new GameClient(playerId, new ChannelToServer(server), this.broadcast, new GuidServiceSystem(), loggerFactory());
     }
 
     public (IGameClient client, string roomId) NewSystemWithARoom(string playerId)

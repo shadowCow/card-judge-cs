@@ -133,6 +133,7 @@ public static class ClientFst
             ClientEvent.RoomCreated rc => ApplyRoomCreated(s, rc),
             ClientEvent.RoomJoined rj => ApplyRoomJoined(s, rj),
             ClientEvent.RoomClosed rc => ApplyRoomClosed(s, rc),
+            ClientEvent.RoomLeft rl => ApplyRoomLeft(s, rl),
             _ => s,
         };
     }
@@ -168,6 +169,11 @@ public static class ClientFst
     }
 
     private static ClientState ApplyRoomClosed(ClientState s, ClientEvent.RoomClosed e)
+    {
+        return new ClientState.NotInRoom(s.PlayerId);
+    }
+
+    private static ClientState ApplyRoomLeft(ClientState s, ClientEvent.RoomLeft e)
     {
         return new ClientState.NotInRoom(s.PlayerId);
     }

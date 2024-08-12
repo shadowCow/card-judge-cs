@@ -14,6 +14,11 @@ public class Then
     {
         return new(Time.AShortTime);
     }
+
+    public static Within WithinADebugTime()
+    {
+        return new(Time.ADebugTime);
+    }
 }
 
 public class Within(TimeSpan timeSpan)
